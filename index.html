@@ -1821,7 +1821,8 @@ function enhDur(){
 
 /* ===== Синхронизация между устройствами (db) ===== */
 S.sync=S.sync||{h:{},mt:{}};S.sync.h=S.sync.h||{};S.sync.mt=S.sync.mt||{};
-var SYN={on:false,ready:false,busy:false,P:null,C:null,q:Promise.resolve(),tm:0,rt:0,dirty:{},err:''};
+var SYN={on:false,ready:false,busy:false,P:null,C:null,q:Promise.resolve(),tm:0,rt:0,dirty:{},err:'',cc:0,force:false,skip:{}};
+function cnt(str){try{var o=JSON.parse(str);return (o.tasks||[]).length+(o.bag||[]).length+(o.goals||[]).length}catch(e){return 0}}
 var SKEEP={notes:1,sync:1,theme:1,lang:1};
 function hsh(str){var h1=0xdeadbeef,h2=0x41c6ce57,i,c;for(i=0;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)+'.'+str.length}
 function sPieces(){
@@ -1858,6 +1859,7 @@ function softRender(){
   render();runTr();
 }
 async function sProc(snap){
+  if(snap.metadata&&snap.metadata.fromCache&&snap.empty)return;
   var pc=sPieces(),applied=false,i,d,key,m,lh,lc,json;
   for(i=0;i<snap.docs.length;i++){
     d=snap.docs[i];key=d.id;m=d.data();if(!m||!m.h||m.h===S.sync.h[key])continue;
@@ -1866,6 +1868,12 @@ async function sProc(snap){
     lc=lh!==null&&lh!==S.sync.h[key];
     if(lc&&(S.sync.mt[key]||0)>m.ts)continue;
     json=await sFetch(key,m);if(json==null)continue;
+    if(key==='main'){
+      var ni=cnt(json),nl=cnt(pc.main);SYN.cc=ni;
+      if(nl>0&&ni===0){snapTake(true);S.sync.h.main='-';S.sync.mt.main=Date.now();SYN.dirty.main=1;continue}
+      if(nl>0&&ni<nl*0.8)snapTake(true);
+      S.sync.cnt=ni;
+    }
     if(lc)sBackup(key,pc[key]);
     sApply(key,json);S.sync.h[key]=m.h;S.sync.mt[key]=m.ts;delete SYN.dirty[key];applied=true;
     pc=sPieces();
@@ -1874,19 +1882,56 @@ async function sProc(snap){
   if(applied){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}
   schedPush(300);
 }
-async function sWrite(k,str,h){
-  var n=Math.max(1,Math.ceil(str.length/50000)),i,ts=Date.now();
-  for(i=0;i<n;i++)await SYN.C.doc(k+'~'+i).set({s:str.slice(i*50000,(i+1)*50000)});
-  await SYN.P.doc(k).set({ts:ts,h:h,n:n});
-  S.sync.h[k]=h;S.sync.mt[k]=ts;delete SYN.dirty[k];
+async function sChunks(pref,str){
+  var n=Math.max(1,Math.ceil(str.length/50000)),i;
+  for(i=0;i<n;i++)await SYN.C.doc(pref+'~'+i).set({s:str.slice(i*50000,(i+1)*50000)});
+  return n;
 }
+async function sWrite(k,str,h){
+  var ts=Date.now(),c=k==='main'?cnt(str):undefined,n=await sChunks(k,str),meta={ts:ts,h:h,n:n};
+  if(c!==undefined)meta.c=c;
+  await SYN.P.doc(k).set(meta);
+  if(k==='main'){
+    S.sync.cnt=c;SYN.cc=c;
+    /* облачная копия последнего «здорового» состояния, не чаще раза в 30 минут */
+    if(c>0&&ts-(S.sync.bakTs||0)>1800000){try{var bn=await sChunks('bak',str);await SYN.C.doc('bakm').set({ts:ts,h:h,n:bn,c:c});S.sync.bakTs=ts}catch(e){}}
+  }
+  S.sync.h[k]=h;S.sync.mt[k]=ts;delete SYN.dirty[k];delete SYN.skip[k];
+}
+function sPending(){var pc=sPieces();return Object.keys(pc).filter(function(k){var h=hsh(pc[k]);return h!==S.sync.h[k]&&SYN.skip[k]!==h})}
+function synBanner(show){
+  var e=document.getElementById('synb');
+  if(!show){if(e)e.remove();return}
+  if(e)return;
+  e=document.createElement('div');e.id='synb';
+  e.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:var(--surface);color:var(--ink);border:2px solid #E5484D;border-radius:12px;padding:12px;font-size:14px;line-height:1.4;box-shadow:0 6px 24px rgba(0,0,0,.3)';
+  e.innerHTML='<div>Защита данных: на этом устройстве стало намного меньше задач, чем в облаке. Отправка в облако остановлена, чтобы не потерять данные. Копия сохранена.</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn alt sm" type="button" data-sb="cloud">Восстановить из облака</button><button class="btn alt sm" type="button" data-sb="force">Отправить всё равно</button></div>';
+  document.body.appendChild(e);runTr();
+}
+async function sFromCloud(){
+  var d=await SYN.P.doc('main').get();if(!d.exists)return false;
+  var m=d.data(),json=await sFetch('main',m);if(json==null||cnt(json)===0)return false;
+  snapTake(true);sApply('main',json);S.sync.h.main=m.h;S.sync.mt.main=m.ts;S.sync.cnt=cnt(json);delete SYN.skip.main;delete SYN.dirty.main;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  synBanner(false);softRender();return true;
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-sb]');if(!b)return;
+  if(b.dataset.sb==='force'){snapTake(true);SYN.force=true;synBanner(false);sPush().then(function(){SYN.force=false})}
+  else sFromCloud().then(function(ok){if(!ok){b.textContent='В облаке нет подходящих данных'}});
+});
 async function sPush(){
   if(!SYN.on||!SYN.ready||SYN.busy)return;
   SYN.busy=true;
   try{
-    var pc=sPieces(),ks=Object.keys(pc),i,k,h,any=false;
+    var pc=sPieces(),ks=Object.keys(pc),i,k,h,any=false,nn,rf;
     for(i=0;i<ks.length;i++){
       k=ks[i];h=hsh(pc[k]);if(S.sync.h[k]===h)continue;
+      if(k==='main'&&!SYN.force){
+        nn=cnt(pc.main);rf=Math.max(S.sync.cnt||0,SYN.cc||0);
+        if(nn===0&&!S.sync.cnt&&!SYN.cc){SYN.skip[k]=h;continue}
+        if(rf>=3&&(nn===0||(rf>=6&&nn<rf*0.4))){SYN.skip[k]=h;snapTake(true);synBanner(true);continue}
+      }
       if(!SYN.dirty[k]){SYN.dirty[k]=1;S.sync.mt[k]=Date.now()}
       setSyn('sync');await sWrite(k,pc[k],h);any=true;
     }
@@ -1895,7 +1940,7 @@ async function sPush(){
   }catch(e){SYN.err=(e&&e.code)||'err';setSyn('err')}
   finally{SYN.busy=false}
 }
-function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){var pc=sPieces();if(Object.keys(pc).some(function(k){return hsh(pc[k])!==S.sync.h[k]})&&!SYN.err)schedPush(2500)})},ms===undefined?2500:ms)}
+function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){var pc=sPieces();if(sPending().length&&!SYN.err)schedPush(2500)})},ms===undefined?2500:ms)}
 var _sv0=save;save=function(){_sv0();schedPush()};
 document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.on){clearTimeout(SYN.tm);sPush()}});
 (async function(){
@@ -1908,6 +1953,12 @@ document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.
   }catch(e){setSyn('off')}
 })();
 (function(){function D(r,e,p,u){if(!DICT[r])DICT[r]=[e,p,u]}
+D('Защита данных: на этом устройстве стало намного меньше задач, чем в облаке. Отправка в облако остановлена, чтобы не потерять данные. Копия сохранена.','Data protection: this device now has far fewer tasks than the cloud. Upload was stopped to avoid data loss. A backup was saved.','Ochrona danych: na tym urządzeniu jest znacznie mniej zadań niż w chmurze. Wysyłanie wstrzymano, aby nie utracić danych. Kopia zapisana.','Захист даних: на цьому пристрої стало набагато менше завдань, ніж у хмарі. Надсилання зупинено, щоб не втратити дані. Копію збережено.');
+D('Восстановить из облака','Restore from cloud','Przywróć z chmury','Відновити з хмари');
+D('Отправить всё равно','Send anyway','Wyślij mimo to','Надіслати все одно');
+D('В облаке нет подходящих данных','No suitable data in the cloud','Brak odpowiednich danych w chmurze','У хмарі немає придатних даних');
+D('Облачная копия','Cloud backup','Kopia w chmurze','Хмарна копія');
+D('Копии нет','No backup','Brak kopii','Копії немає');
 D('Синхронизация…','Syncing…','Synchronizacja…','Синхронізація…');
 D('☁ Синхронизировано','☁ Synced','☁ Zsynchronizowano','☁ Синхронізовано');
 D('Синхронизация недоступна: данные только на этом устройстве','Sync unavailable: data stays on this device only','Synchronizacja niedostępna: dane tylko na tym urządzeniu','Синхронізація недоступна: дані лише на цьому пристрої');
@@ -2388,8 +2439,23 @@ function snapCard(){
     rows.push('<div class="row" style="justify-content:space-between;align-items:center;margin-top:6px"><span class="lbl">'+String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+' '+hm(d.getHours()*60+d.getMinutes())+' · задач: '+snapN(str)+'</span><button class="btn alt sm" type="button" data-sn="'+k+'">Восстановить</button></div>');
   });
   if(bk)rows.push('<div class="row" style="justify-content:space-between;align-items:center;margin-top:6px"><span class="lbl">Копия перед обновлением из облака · задач: '+snapN(bk)+'</span><button class="btn alt sm" type="button" data-sn="planner-backup-main">Восстановить</button></div>');
+  if(SYN.on)rows.push('<div class="row" style="justify-content:space-between;align-items:center;margin-top:6px"><span class="lbl">Облачная копия</span><button class="btn alt sm" type="button" data-cb="1">Восстановить</button></div>');
   return '<div class="card"><h2 style="font-size:16px;margin-bottom:4px">Резервные копии</h2><p class="lbl" style="margin:0 0 4px">Приложение само сохраняет копии ваших задач на этом устройстве. Если что-то пропало, выберите копию.</p>'+(rows.join('')||'<p class="lbl">Копий пока нет</p>')+'</div>';
 }
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-cb]');if(!b)return;
+  if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Нажмите ещё раз';setTimeout(function(){if(b.isConnected){delete b.dataset.arm;b.textContent='Восстановить'}},4000);return}
+  (async function(){
+    try{
+      var d=await SYN.C.doc('bakm').get();if(!d.exists){b.textContent='Копии нет';return}
+      var m=d.data(),i,str='';
+      for(i=0;i<m.n;i++){var c=await SYN.C.doc('bak~'+i).get();if(!c.exists){b.textContent='Копии нет';return}str+=c.data().s}
+      if(hsh(str)!==m.h||cnt(str)===0){b.textContent='Копии нет';return}
+      snapTake(true);sApply('main',str);S.sync.cnt=cnt(str);delete SYN.skip.main;
+      save();synBanner(false);render();runTr();
+    }catch(x){b.textContent='Копии нет'}
+  })();
+});
 document.addEventListener('click',function(e){
   var b=e.target.closest('[data-sn]');if(!b)return;
   if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Нажмите ещё раз';setTimeout(function(){if(b.isConnected){delete b.dataset.arm;b.textContent='Восстановить'}},4000);return}
