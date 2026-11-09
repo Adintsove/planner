@@ -1382,23 +1382,36 @@ function initNote(lc,d){
   lc.querySelectorAll('.cl').forEach(function(b){b.addEventListener('click',function(){NT.col=b.dataset.c;if(NT.tool==='er')NT.tool='pen';paintTools()})});
   lc.querySelector('#nsz').addEventListener('input',function(e){NT.sz[NT.tool]=+e.target.value});
   function copyCv(){var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);return t}
-  function trimUndo(){var tot=0;undo.forEach(function(q){tot+=q.width*q.height*4});while(undo.length>1&&(undo.length>10||tot>48e6)){var o=undo.shift();tot-=o.width*o.height*4}}
-  function snap(){var t=copyCv();undo.push(t);trimUndo();return t}
-  function startBase(){if(!base||base.width!==cv.width||base.height!==cv.height)base=copyCv();undo.push(base);trimUndo();return base}
+  function qSize(q){return q.full?q.full.width*q.full.height*4:q.r.w*q.r.h*4}
+  function trimUndo(){var tot=0;undo.forEach(function(q){tot+=qSize(q)});while(undo.length>1&&(undo.length>25||tot>48e6)){tot-=qSize(undo.shift())}}
+  function snap(){undo.push({full:copyCv()});trimUndo()}
+  function ensureBase(){if(!base||base.width!==cv.width||base.height!==cv.height)base=copyCv();return base}
+  function rectOf(bb,w){var pad=w/2+4,x=Math.max(0,Math.floor((bb.x0-pad)*K)),y=Math.max(0,Math.floor((bb.y0-pad)*K)),x2=Math.min(cv.width,Math.ceil((bb.x1+pad)*K)),y2=Math.min(cv.height,Math.ceil((bb.y1+pad)*K));return {x:x,y:y,w:Math.max(0,x2-x),h:Math.max(0,y2-y)}}
   function putRaw(t){cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(0,0,cv.width,cv.height);if(t)cx.drawImage(t,0,0);cx.restore()}
-  lc.querySelector('#nun').addEventListener('click',function(){if(!undo.length)return;var t=undo.pop();putRaw(t);base=t;ink=true;later(1500)});
+  function patchBack(c,r){
+    cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(r.x,r.y,r.w,r.h);cx.drawImage(c,r.x,r.y);cx.restore();
+    if(base&&base.width===cv.width&&base.height===cv.height){var g=base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(c,r.x,r.y)}
+  }
+  function restoreRect(s,r){cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(r.x,r.y,r.w,r.h);cx.drawImage(s.base,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);cx.restore()}
+  lc.querySelector('#nun').addEventListener('click',function(){if(!undo.length)return;var q=undo.pop();if(q.full){putRaw(q.full);base=q.full}else patchBack(q.c,q.r);ink=true;later(1500)});
   lc.querySelector('#ncl').addEventListener('click',function(){snap();putRaw(null);base=null;ink=false;later(1500)});
   function pt(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*LW/r.width,y:(e.clientY-r.top)*LH/r.height}}
-  function wd(s,e){return (s.tool==='pen'&&e.pointerType==='pen'&&e.pressure>0)?s.w*(0.35+e.pressure*1.3):s.w}
+  function wd(s){return s.pen&&s.tool==='pen'?s.w*(0.35+s.pr*1.3):s.w}
+  function grow2(s,p){var b=s.bb;if(p.x<b.x0)b.x0=p.x;if(p.x>b.x1)b.x1=p.x;if(p.y<b.y0)b.y0=p.y;if(p.y>b.y1)b.y1=p.y}
   function setup(s){cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.c;cx.fillStyle=s.c;cx.globalCompositeOperation=s.tool==='er'?'destination-out':'source-over';cx.globalAlpha=1}
   function mark(s){
-    var pad=s.w/2+3,bx=Math.max(0,Math.floor((s.bb.x0-pad)*K)),by=Math.max(0,Math.floor((s.bb.y0-pad)*K)),bw=Math.min(cv.width,Math.ceil((s.bb.x1+pad)*K))-bx,bh=Math.min(cv.height,Math.ceil((s.bb.y1+pad)*K))-by;
-    cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(bx,by,bw,bh);cx.drawImage(s.base,bx,by,bw,bh,bx,by,bw,bh);cx.restore();
+    var r=rectOf(s.bb,s.w);restoreRect(s,r);
     cx.globalAlpha=.4;cx.globalCompositeOperation='source-over';cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.c;cx.lineWidth=s.w;cx.beginPath();cx.moveTo(s.pts[0].x,s.pts[0].y);
     for(var i=1;i<s.pts.length-1;i++){var m={x:(s.pts[i].x+s.pts[i+1].x)/2,y:(s.pts[i].y+s.pts[i+1].y)/2};cx.quadraticCurveTo(s.pts[i].x,s.pts[i].y,m.x,m.y)}
     var l=s.pts[s.pts.length-1];cx.lineTo(l.x,l.y);if(s.pts.length===1)cx.lineTo(l.x+.01,l.y);cx.stroke();cx.globalAlpha=1;
   }
-  var tch={},ntch=0,scrolling=false,penDown=false,lastAvg=0;
+  var tch={},ntch=0,scrolling=false,penDown=false,lastAvg=0,mom=0,vel=0,lvt=0;
+  function stopMom(){if(mom){cancelAnimationFrame(mom);mom=0}}
+  function startMom(){
+    stopMom();var last=performance.now();
+    function step(t){var dt=Math.min(40,Math.max(1,t-last));last=t;window.scrollBy(0,vel*dt);vel*=Math.exp(-dt/320);if(Math.abs(vel)>0.03)mom=requestAnimationFrame(step);else mom=0}
+    mom=requestAnimationFrame(step);
+  }
   function penAct(e){
     if(e.pointerType!=='pen')return;
     lastPen=Date.now();
@@ -1410,9 +1423,17 @@ function initNote(lc,d){
   function tAvg(){var a=0,n=0,k;for(k in tch){a+=tch[k];n++}return n?a/n:0}
   function paintDot(s){
     if(s.painted||stroke!==s)return;s.painted=true;clearTimeout(s.timer);
-    if(s.tool==='mk'){mark(s)}else{setup(s);cx.beginPath();cx.arc(s.lp.x,s.lp.y,s.w0/2,0,6.2832);cx.fill()}
+    if(s.tool==='mk'){mark(s)}else{setup(s);cx.beginPath();cx.arc(s.lp.x,s.lp.y,wd(s)/2,0,6.2832);cx.fill()}
   }
-  function abortStroke(){var s=stroke;if(!s)return;clearTimeout(s.timer);if(s.painted)putRaw(s.base);if(undo[undo.length-1]===s.base)undo.pop();stroke=null}
+  function abortStroke(){var s=stroke;if(!s)return;clearTimeout(s.timer);if(s.painted)restoreRect(s,rectOf(s.bb,s.w*1.8));stroke=null}
+  /* добавить точку к штриху: лёгкое сглаживание дрожания + сглаженный нажим */
+  function addPt(s,raw,pr,final){
+    var dx=raw.x-s.sp.x,dy=raw.y-s.sp.y,d=Math.sqrt(dx*dx+dy*dy),a=final?1:Math.min(1,s.al+d/9),p={x:s.sp.x+dx*a,y:s.sp.y+dy*a};
+    s.sp=p;s.pr+=(pr-s.pr)*(final?0:0.3);grow2(s,p);
+    if(s.tool==='mk'){s.pts.push(p);return}
+    setup(s);var m={x:(s.lp.x+p.x)/2,y:(s.lp.y+p.y)/2};
+    cx.beginPath();cx.moveTo(s.lm.x,s.lm.y);cx.quadraticCurveTo(s.lp.x,s.lp.y,m.x,m.y);cx.lineWidth=wd(s);cx.stroke();s.lp=p;s.lm=m;
+  }
   cv.addEventListener('contextmenu',function(e){e.preventDefault()});
   cv.addEventListener('pointerdown',function(e){
     if(NT.mode!=='draw'||(e.pointerType==='mouse'&&e.button!==0))return;
@@ -1420,45 +1441,57 @@ function initNote(lc,d){
     penAct(e);
     try{if(window.getSelection)getSelection().removeAllRanges()}catch(x){}
     if(touch){
-      if(penDown||Date.now()-lastPen<700)return;
-      e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}
+      e.preventDefault();stopMom();
+      if(penDown||Date.now()-lastPen<900)return;
+      if(e.width>45||e.height>45)return;
+      try{cv.setPointerCapture(e.pointerId)}catch(x){}
       tch[e.pointerId]=e.clientY;ntch++;
-      if(NT.po===true||ntch>=2){scrolling=true;abortStroke();lastAvg=tAvg();return}
+      if(NT.po===true||ntch>=2){scrolling=true;abortStroke();lastAvg=tAvg();vel=0;lvt=performance.now();return}
       if(scrolling)return;
     }else if(e.pointerType==='pen'){penDown=true;if(stroke&&stroke.touch)abortStroke()}
     if(stroke)return;
     e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}
     var p=pt(e);if(p.y>LH-120){grow(LH+400);p=pt(e)}
-    var tl=(e.pointerType==='pen'&&((e.buttons&32)||e.button===5))?'er':NT.tool;
-    var s={id:e.pointerId,touch:touch,tool:tl,w:NT.sz[tl],c:inkCol(),pts:[p],lp:p,lm:p,painted:false,timer:null,base:startBase(),bb:{x0:p.x,y0:p.y,x1:p.x,y1:p.y}};
-    s.w0=wd(s,e);stroke=s;
+    var tl=(e.pointerType==='pen'&&((e.buttons&32)||e.button===5))?'er':NT.tool,pen=e.pointerType==='pen';
+    var s={id:e.pointerId,touch:touch,pen:pen,tool:tl,w:NT.sz[tl],c:inkCol(),pts:[p],lp:p,lm:p,sp:p,al:pen?0.6:0.4,pr:(pen&&e.pressure>0)?e.pressure:0.5,painted:false,timer:null,base:ensureBase(),bb:{x0:p.x,y0:p.y,x1:p.x,y1:p.y}};
+    stroke=s;
     if(touch)s.timer=setTimeout(function(){paintDot(s)},90);else paintDot(s);
   });
   cv.addEventListener('pointermove',function(e){
     penAct(e);
     if(e.pointerType==='touch'){
       if(tch[e.pointerId]===undefined)return;tch[e.pointerId]=e.clientY;
-      if(scrolling){var a=tAvg();window.scrollBy(0,lastAvg-a);lastAvg=a;return}
+      if(scrolling){var a=tAvg(),now=performance.now(),dy=lastAvg-a;window.scrollBy(0,dy);if(now>lvt)vel=0.7*vel+0.3*(dy/(now-lvt));lvt=now;lastAvg=a;return}
     }
     var s=stroke;if(!s||e.pointerId!==s.id)return;
     paintDot(s);
     var ev=e.getCoalescedEvents?e.getCoalescedEvents():[e];if(!ev.length)ev=[e];
-    ev.forEach(function(q){
-      var p=pt(q);
-      if(s.tool==='mk'){s.pts.push(p);var b=s.bb;if(p.x<b.x0)b.x0=p.x;if(p.x>b.x1)b.x1=p.x;if(p.y<b.y0)b.y0=p.y;if(p.y>b.y1)b.y1=p.y;return}
-      setup(s);var m={x:(s.lp.x+p.x)/2,y:(s.lp.y+p.y)/2};
-      cx.beginPath();cx.moveTo(s.lm.x,s.lm.y);cx.quadraticCurveTo(s.lp.x,s.lp.y,m.x,m.y);cx.lineWidth=wd(s,q);cx.stroke();s.lp=p;s.lm=m;
-    });
+    ev.forEach(function(q){addPt(s,pt(q),(s.pen&&q.pressure>0)?q.pressure:0.5)});
     if(s.tool==='mk')mark(s);
   });
   function endPtr(e){
     penAct(e);
-    if(e.pointerType==='touch'){if(tch[e.pointerId]!==undefined){delete tch[e.pointerId];ntch=Math.max(0,ntch-1);if(ntch===0)scrolling=false;else lastAvg=tAvg()}}
+    if(e.pointerType==='touch'){
+      if(tch[e.pointerId]!==undefined){
+        delete tch[e.pointerId];ntch=Math.max(0,ntch-1);
+        if(ntch===0){if(scrolling&&performance.now()-lvt<90&&Math.abs(vel)>0.12)startMom();scrolling=false}else lastAvg=tAvg();
+      }
+    }
     else if(e.pointerType==='pen')penDown=false;
     var s=stroke;if(!s||e.pointerId!==s.id)return;
-    paintDot(s);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
-    var l=s.tool==='mk'?s.pts[s.pts.length-1]:s.lp;if(l.y>LH-120)grow(LH+400);
-    stroke=null;ink=true;base=copyCv();later(2500);
+    paintDot(s);
+    if(e.type==='pointerup'){var fp=pt(e),ld=Math.hypot(fp.x-s.sp.x,fp.y-s.sp.y);if(ld>0.4)addPt(s,fp,s.pr,true);if(s.tool==='mk')mark(s)}
+    cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
+    var l=s.tool==='mk'?s.pts[s.pts.length-1]:s.lp;
+    /* undo = только заплатка вокруг штриха, а не копия всего холста */
+    var r=rectOf(s.bb,s.w*1.8);
+    if(r.w>0&&r.h>0){
+      var pc=document.createElement('canvas');pc.width=r.w;pc.height=r.h;pc.getContext('2d').drawImage(s.base,r.x,r.y,r.w,r.h,0,0,r.w,r.h);
+      undo.push({r:r,c:pc});trimUndo();
+      var g=s.base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(cv,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);
+    }
+    if(l.y>LH-120)grow(LH+400);
+    stroke=null;ink=true;later(2500);
   }
   cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
   var more=lc.querySelector('#nmore');
