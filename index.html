@@ -80,6 +80,21 @@ input[type=color]{width:44px;padding:2px;cursor:pointer}
 .imgx{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:20px;line-height:1;cursor:pointer;padding:0}
 .ncv{position:absolute;left:0;top:0;width:100%;pointer-events:none;touch-action:none}
 .ncv.on{pointer-events:auto;cursor:crosshair;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.nstks{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:3}
+.nstk{position:absolute;pointer-events:auto;box-shadow:0 3px 10px rgba(0,0,0,.22);border-radius:4px;color:#16233B}
+.nstk .stin{position:absolute;inset:0;overflow:hidden;border-radius:4px}
+.nstk .sth{position:absolute;left:0;right:0;top:0;background:rgba(0,0,0,.08);cursor:grab;touch-action:none}
+.nstk .stt{position:absolute;left:0;right:0;bottom:0;overflow:auto;outline:none;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.nstk .stt:empty::before{content:attr(data-ph);color:rgba(22,35,59,.45);pointer-events:none}
+.nstk .scv{position:absolute;left:0;top:0;pointer-events:none}
+.nstk.sel{outline:2px solid #2E86AB;outline-offset:1px}
+.nstk .rh,.nstk .stbar{display:none}
+.nstk.sel .rh{display:block}.nstk.sel .stbar{display:flex}
+.nstk .rh.se{touch-action:none}
+.stbar{position:absolute;left:0;gap:2px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:2px 4px;box-shadow:0 2px 8px rgba(0,0,0,.15);z-index:3;white-space:nowrap}
+.stbar .cl{width:36px;height:36px}
+.stbar .stdel{min-width:36px;min-height:36px;border:0;background:transparent;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;padding:0}
+.npage.dm .nstk{pointer-events:none}
 .npage.dm,.npage.dm *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.npage.dm{touch-action:none}
 #npo[aria-pressed=true]{background:var(--btn);color:var(--btnink)}
 #npo{font-size:20px}
@@ -1042,6 +1057,12 @@ var DICT={};
 ["Отменить","Undo","Cofnij","Скасувати дію"],
 ["Очистить рисунок","Clear drawing","Wyczyść rysunek","Очистити малюнок"],
 ["Удалить картинку","Delete image","Usuń obraz","Видалити картинку"],
+["Добавить стикер","Add sticker","Dodaj karteczkę","Додати стікер"],
+["Удалить стикер","Delete sticker","Usuń karteczkę","Видалити стікер"],
+["Цвет стикера","Sticker color","Kolor karteczki","Колір стікера"],
+["Перетащить стикер","Drag sticker","Przeciągnij karteczkę","Перетягнути стікер"],
+["Текст стикера","Sticker text","Tekst karteczki","Текст стікера"],
+["Текст стикера…","Sticker text…","Tekst karteczki…","Текст стікера…"],
 ["Пишите заметку к этому дню…","Write a note for this day…","Napisz notatkę do tego dnia…","Пишіть нотатку до цього дня…"],
 ["Не удалось сохранить: память браузера заполнена. Удалите лишние картинки или рисунки.","Could not save: browser storage is full. Remove extra images or drawings.","Nie udało się zapisać: pamięć przeglądarki jest pełna. Usuń zbędne obrazy lub rysunki.","Не вдалося зберегти: пам’ять браузера заповнена. Видаліть зайві картинки або малюнки."],
 ["Не удалось открыть картинку","Could not open the image","Nie udało się otworzyć obrazu","Не вдалося відкрити картинку"],
@@ -1197,7 +1218,7 @@ function tr(s){
 function trNode(n){
   var r,v,t;
   if(n.nodeType===3){
-    var p=n.parentNode;if(!p||/^(SCRIPT|STYLE|TITLE)$/.test(p.nodeName)||(p.closest&&p.closest('.ned')))return;
+    var p=n.parentNode;if(!p||/^(SCRIPT|STYLE|TITLE)$/.test(p.nodeName)||(p.closest&&p.closest('.ned,.stt')))return;
     v=n.nodeValue;r=REC.get(n);if(!r||v!==r.t)r={o:v,t:v};
     t=tr(r.o);r.t=t;REC.set(n,r);if(v!==t)n.nodeValue=t;
   } else if(n.nodeType===1){
@@ -1218,10 +1239,11 @@ function langCard(){
   return '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Язык приложения</h2><div class="seg">'+LNG.map(function(x){return '<button type="button" data-act="lang" data-v="'+x[0]+'" aria-pressed="'+(LANG===x[0])+'" aria-label="'+x[2]+'" lang="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div></div>';
 }
 document.documentElement.lang=LANG;
-OB=new MutationObserver(function(ms){if(ms.every(function(m){var n=m.target.nodeType===3?m.target.parentNode:m.target;return n&&n.closest&&n.closest('.ned')}))return;runTr()});
+OB=new MutationObserver(function(ms){if(ms.every(function(m){var n=m.target.nodeType===3?m.target.parentNode:m.target;return n&&n.closest&&n.closest('.ned,.stt')}))return;runTr()});
 var NCOL=['auto','#2E86AB','#E4572E','#2E9A62','#8A4FD0','#F5B301'],NB=null,saveErr=false,LW=800,
 NT={mode:'text',tool:'pen',col:'auto',sz:{pen:3,mk:16,er:18},po:(function(){try{var v=localStorage.getItem('planner-po');if(v!==null)return v==='1';if(/iPad/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1))return true;return undefined}catch(e){return undefined}})()};
-var NI={t:'M4 7V4h16v3M9 20h6M12 4v16',pen:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',mk:'M9 11l-6 6v3h9l3-3M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4',er:'m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21M22 21H7M5 11l9 9',un:'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11',tr:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',im:'M3 5h18v14H3zM8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM21 15l-5-5L5 19'};
+var NI={t:'M4 7V4h16v3M9 20h6M12 4v16',pen:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',mk:'M9 11l-6 6v3h9l3-3M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4',er:'m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21M22 21H7M5 11l9 9',un:'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11',tr:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',im:'M3 5h18v14H3zM8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM21 15l-5-5L5 19',sk:'M4 4h16v10l-6 6H4zM14 20v-6h6'};
+var SKC=['#FFE873','#FFB8CC','#B9F0B0','#B3E0FF','#FFCF8F'];
 function nic(d){return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>'}
 function inkCol(){return NT.col==='auto'?((getComputedStyle(document.documentElement).getPropertyValue('--ink')||'#16233B').trim()):NT.col}
 function ser(n){var o='';n.childNodes.forEach(function(c){
@@ -1242,13 +1264,14 @@ function noteMarkup(){
   var m=NT.mode==='draw',tl=function(id,ic,lb){return '<button type="button" class="ic nto" data-t="'+id+'" aria-label="'+lb+'" title="'+lb+'" aria-pressed="'+(NT.tool===id)+'">'+nic(ic)+'</button>'};
   return '<h2 style="margin-bottom:6px">Заметки</h2>'+
   '<div class="nt"><div class="seg" style="flex:none"><button type="button" class="nm" data-m="text" aria-pressed="'+(!m)+'">'+nic(NI.t)+'<span>Текст</span></button><button type="button" class="nm" data-m="draw" aria-pressed="'+m+'">'+nic(NI.pen)+'<span>Рисование</span></button></div>'+
-  '<button type="button" class="ic" id="nimg" aria-label="Вставить картинку" title="Вставить картинку">'+nic(NI.im)+'</button><input type="file" id="nfile" accept="image/*" multiple hidden></div>'+
+  '<button type="button" class="ic" id="nimg" aria-label="Вставить картинку" title="Вставить картинку">'+nic(NI.im)+'</button><input type="file" id="nfile" accept="image/*" multiple hidden>'+
+  '<button type="button" class="ic" id="nstk" aria-label="Добавить стикер" title="Добавить стикер">'+nic(NI.sk)+'</button></div>'+
   '<div class="nt" id="ndraw"'+(m?'':' hidden')+'>'+tl('pen',NI.pen,'Ручка')+tl('mk',NI.mk,'Маркер')+tl('er',NI.er,'Ластик')+
   NCOL.map(function(c){return '<button type="button" class="cl" data-c="'+c+'" aria-label="Цвет чернил" title="Цвет чернил" aria-pressed="'+(NT.col===c)+'"><span style="background:'+(c==='auto'?'var(--ink)':c)+'"></span></button>'}).join('')+
   '<input type="range" id="nsz" min="1" max="40" value="'+NT.sz[NT.tool]+'" aria-label="Толщина" style="width:110px">'+
   '<button type="button" class="ic" id="npo" aria-label="Только стилус" title="Только стилус: палец не рисует, а прокручивает страницу" aria-pressed="'+(NT.po===true)+'">✍︎</button>'+
   '<button type="button" class="ic" id="nun" aria-label="Отменить" title="Отменить">'+nic(NI.un)+'</button><button type="button" class="ic" id="ncl" aria-label="Очистить рисунок" title="Очистить рисунок">'+nic(NI.tr)+'</button></div>'+
-  '<div class="npage" id="npage"><div class="ned" id="ned" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Заметки"></div><div class="nimgs" id="nimgs"></div><canvas class="ncv" id="ncv"></canvas></div><button type="button" class="ghost nmore" id="nmore" aria-label="Увеличить поле вниз">⌄ Растянуть поле</button><p class="lbl" id="nst" style="margin:6px 0 0"></p>';
+  '<div class="npage" id="npage"><div class="ned" id="ned" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Заметки"></div><div class="nimgs" id="nimgs"></div><canvas class="ncv" id="ncv"></canvas><div class="nstks" id="nstks"></div></div><button type="button" class="ghost nmore" id="nmore" aria-label="Увеличить поле вниз">⌄ Растянуть поле</button><p class="lbl" id="nst" style="margin:6px 0 0"></p>';
 }
 function drawNotes(){
   var lc=document.getElementById('lc');if(!lc)return;
@@ -1259,16 +1282,56 @@ function drawNotes(){
 function initNote(lc,d){
   lc.innerHTML=noteMarkup();
   var ned=lc.querySelector('#ned'),cv=lc.querySelector('#ncv'),page=lc.querySelector('#npage'),st=lc.querySelector('#nst'),cx=cv.getContext('2d'),
-  tm=null,undo=[],ink=false,loading=false,stroke=null,base=null,saveVer=0,lastPen=0,stretched=!!(S.notes[d]&&S.notes[d].lh),saved=S.notes[d]||{};
+  tm=null,undo=[],ink=false,loading=false,stroke=null,saveVer=0,lastPen=0,stretched=!!(S.notes[d]&&S.notes[d].lh),saved=S.notes[d]||{};
   ned.setAttribute('data-ph',tr('Пишите заметку к этому дню…'));
   var mig=[],layer=lc.querySelector('#nimgs'),selId=null,gi=null,imgs=(saved.im||[]).map(function(o){return {id:uid(),src:o.s,x:o.x,y:o.y,w:o.w,r:o.r}});
+  var sl=lc.querySelector('#nstks'),gs=null,stks=(saved.sk||[]).map(function(o){return {id:uid(),x:o.x,y:o.y,w:o.w,h:o.h,c:o.c,t:o.t||'',d:o.d||'',cw:o.cw||o.w,ch:o.ch||o.h}});
   if(saved.h){var doc=new DOMParser().parseFromString('<body>'+saved.h,'text/html');bld(doc.body,ned,mig)}
   var w0=Math.max(page.clientWidth,300),K=Math.max(1,Math.min(2,Math.min(1600,Math.round(w0*(window.devicePixelRatio||1)))/LW)),LH=Math.max(saved.lh||0,Math.ceil(300*LW/w0));
   cv.width=Math.round(LW*K);cv.height=Math.round(LH*K);cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingQuality='high';
-  function layout(){var w=page.clientWidth||300,h=Math.round(LH*w/LW),sc=w/LW;cv.style.height=h+'px';ned.style.minHeight=h+'px';layer.style.height=h+'px';imgs.forEach(function(o){place(o,sc)})}
+  var M={cv:cv,cx:cx,base:null};
+  function layout(){var w=page.clientWidth||300,h=Math.round(LH*w/LW),sc=w/LW;cv.style.height=h+'px';ned.style.minHeight=h+'px';layer.style.height=h+'px';sl.style.height=h+'px';imgs.forEach(function(o){place(o,sc)});stks.forEach(function(o){sPlace(o,sc)})}
   function place(o,sc){var e=o.el;if(!e)return;e.style.left=(o.x*sc)+'px';e.style.top=(o.y*sc)+'px';e.style.width=(o.w*sc)+'px'}
   function byId(id){return imgs.filter(function(q){return q.id===id})[0]}
-  function setSel(id){selId=id;imgs.forEach(function(o){if(o.el)o.el.classList.toggle('sel',o.id===id)})}
+  function setSel(id){selId=id;imgs.forEach(function(o){if(o.el)o.el.classList.toggle('sel',o.id===id)});stks.forEach(function(o){if(o.el)o.el.classList.toggle('sel',o.id===id)})}
+  /* ===== стикеры: листок поверх заметки, на нём текст и рисунок стилусом ===== */
+  var SH=34;
+  function sById(id){return stks.filter(function(q){return q.id===id})[0]}
+  function sPlace(o,sc){
+    var e=o.el;if(!e)return;
+    e.style.left=(o.x*sc)+'px';e.style.top=(o.y*sc)+'px';e.style.width=(o.w*sc)+'px';e.style.height=(o.h*sc)+'px';e.style.background=o.c;
+    o.th.style.height=(SH*sc)+'px';o.tx.style.top=(SH*sc)+'px';o.tx.style.padding=(4*sc)+'px '+(10*sc)+'px';o.tx.style.fontSize=(22*sc)+'px';
+    o.cv.style.width=(o.cw*sc)+'px';o.cv.style.height=(o.ch*sc)+'px';
+    var b=o.bar;if(o.y*sc>50){b.style.top='auto';b.style.bottom='calc(100% + 6px)'}else{b.style.bottom='auto';b.style.top='calc(100% + 6px)'}
+    b.querySelectorAll('.cl').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.c===o.c)});
+  }
+  function sCanvas(o,old){
+    var c=document.createElement('canvas');c.className='scv';c.width=Math.round(o.cw*K);c.height=Math.round(o.ch*K);
+    var g=c.getContext('2d');if(old)g.drawImage(old,0,0);g.setTransform(K,0,0,K,0,0);g.imageSmoothingQuality='high';
+    if(o.cv)o.cv.replaceWith(c);o.cv=c;o.cx=g;o.base=null;
+  }
+  function sMk(o){
+    var e=document.createElement('div');e.className='nstk';e.dataset.id=o.id;
+    var inn=document.createElement('div');inn.className='stin';e.appendChild(inn);
+    var th=document.createElement('div');th.className='sth';th.title='Перетащить стикер';inn.appendChild(th);
+    var tx=document.createElement('div');tx.className='stt';tx.setAttribute('contenteditable',NT.mode==='draw'?'false':'true');tx.setAttribute('role','textbox');tx.setAttribute('aria-label','Текст стикера');tx.setAttribute('data-ph',tr('Текст стикера…'));inn.appendChild(tx);
+    if(o.t){var doc=new DOMParser().parseFromString('<body>'+o.t,'text/html');bld(doc.body,tx)}
+    o.th=th;o.tx=tx;o.cv=null;sCanvas(o);inn.appendChild(o.cv);
+    var h=document.createElement('i');h.className='rh se';h.dataset.h='se';e.appendChild(h);
+    var b=document.createElement('div');b.className='stbar';
+    b.innerHTML=SKC.map(function(c){return '<button type="button" class="cl" data-c="'+c+'" aria-label="Цвет стикера" title="Цвет стикера"><span style="background:'+c+'"></span></button>'}).join('')+'<button type="button" class="stdel" aria-label="Удалить стикер" title="Удалить стикер">×</button>';
+    e.appendChild(b);o.bar=b;
+    sl.appendChild(e);o.el=e;
+    if(o.d){o.loading=true;var im=new Image();im.onload=function(){o.cx.drawImage(im,0,0,o.cw,o.ch);o.ink=true;o.loading=false};im.onerror=function(){o.loading=false};im.src=o.d}
+    sPlace(o,(page.clientWidth||300)/LW);
+  }
+  function sRm(o){stks=stks.filter(function(q){return q!==o});o.dead=true;if(o.el)o.el.remove();selId=null;later()}
+  function putStk(){
+    var sc=(page.clientWidth||300)/LW,rc=page.getBoundingClientRect(),n=stks.length%6,w=300,h=240;
+    var o={id:uid(),x:Math.min(LW-w,40+n*28),y:Math.max(0,-rc.top)/sc+30+n*28,w:w,h:h,c:SKC[stks.length%SKC.length],t:'',d:'',cw:w,ch:h};
+    stks.push(o);sMk(o);fit();setSel(o.id);later();
+    if(NT.mode!=='draw')setTimeout(function(){try{o.tx.focus()}catch(x){}},0);
+  }
   function mk(o){
     var e=document.createElement('div');e.className='nimg';e.tabIndex=0;e.dataset.id=o.id;
     var im=document.createElement('img');im.src=o.src;im.alt='';im.draggable=false;e.appendChild(im);
@@ -1276,21 +1339,27 @@ function initNote(lc,d){
     ['nw','ne','sw','se'].forEach(function(k){var h=document.createElement('i');h.className='rh '+k;h.dataset.h=k;e.appendChild(h)});
     layer.appendChild(e);o.el=e;place(o,(page.clientWidth||300)/LW);
   }
-  function fit(){var m=0;imgs.forEach(function(o){m=Math.max(m,o.y+o.w*o.r)});if(m+40>LH)grow(Math.ceil(m+40));else layout()}
+  function fit(){var m=0;imgs.forEach(function(o){m=Math.max(m,o.y+o.w*o.r)});stks.forEach(function(o){m=Math.max(m,o.y+o.h)});if(m+40>LH)grow(Math.ceil(m+40));else layout()}
   function rm(o){imgs=imgs.filter(function(q){return q!==o});if(o.el)o.el.remove();selId=null;later()}
-  function grow(n){n=Math.min(n,4000);if(n<=LH)return;var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);base=null;LH=n;cv.height=Math.round(LH*K);cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingQuality='high';cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0);cx.restore();layout()}
-  layout();imgs.forEach(mk);fit();
+  function grow(n){n=Math.min(n,4000);if(n<=LH)return;var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);M.base=null;LH=n;cv.height=Math.round(LH*K);cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingQuality='high';cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0);cx.restore();layout()}
+  layout();imgs.forEach(mk);stks.forEach(sMk);fit();
   mig.forEach(function(src){var im=new Image();im.onload=function(){var w=Math.min(460,im.width),r=im.height/im.width,y=imgs.reduce(function(m,o){return Math.max(m,o.y+o.w*o.r+20)},Math.ceil(ned.scrollHeight*LW/(page.clientWidth||300))+10),o={id:uid(),src:src,x:30,y:y,w:w,r:r};imgs.push(o);mk(o);fit();later()};im.src=src});
   if(saved.d){loading=true;var im=new Image();im.onload=function(){cx.drawImage(im,0,0,LW,saved.lh||(im.height*LW/im.width));ink=true;loading=false};im.onerror=function(){loading=false};im.src=saved.d}
   function inkBlank(){var c=document.createElement('canvas');c.width=256;c.height=Math.max(1,Math.round(256*cv.height/cv.width));var g=c.getContext('2d');g.drawImage(cv,0,0,c.width,c.height);var a=g.getImageData(0,0,c.width,c.height).data;for(var i=3;i<a.length;i+=4)if(a[i])return false;return true}
   function commit(rec){
-    if(rec.h||rec.d||rec.im||rec.lh)S.notes[d]=rec;else delete S.notes[d];
+    if(rec.h||rec.d||rec.im||rec.sk||rec.lh)S.notes[d]=rec;else delete S.notes[d];
     save();st.textContent=saveErr?'Не удалось сохранить: память браузера заполнена. Удалите лишние картинки или рисунки.':'';
   }
   function saveNow(sync){
     clearTimeout(tm);tm=null;
     var h=ser(ned),blank=h.replace(/<br>|<\/?div>|&nbsp;|\s/g,'')==='',rec={};
     if(imgs.length)rec.im=imgs.map(function(o){return {s:o.src,x:Math.round(o.x),y:Math.round(o.y),w:Math.round(o.w),r:Math.round(o.r*1000)/1000}});
+    if(stks.length)rec.sk=stks.map(function(o){
+      var t=ser(o.tx),q={x:Math.round(o.x),y:Math.round(o.y),w:Math.round(o.w),h:Math.round(o.h),c:o.c,cw:Math.round(o.cw),ch:Math.round(o.ch)};
+      if(t.replace(/<br>|<\/?div>|&nbsp;|\s/g,''))q.t=t;
+      if(o.loading){if(o.d)q.d=o.d}else if(o.ink){try{q.d=o.d=o.cv.toDataURL('image/png')}catch(e){}}
+      return q;
+    });
     if(!blank)rec.h=h;
     if(stretched)rec.lh=LH;
     ++saveVer;
@@ -1313,7 +1382,37 @@ function initNote(lc,d){
   var ro=new ResizeObserver(function(){var w=page.clientWidth;if(!w)return;layout();var need=Math.ceil(ned.scrollHeight*LW/w);if(need>LH+4)grow(need)});
   ro.observe(page);ro.observe(ned);
   ned.addEventListener('input',function(){if(ned.textContent==='')ned.innerHTML='';later()});
-  page.addEventListener('pointerdown',function(e){if(!e.target.closest('.nimg'))setSel(null)});
+  page.addEventListener('pointerdown',function(e){if(!e.target.closest('.nimg,.nstk'))setSel(null)});
+  sl.addEventListener('input',function(e){if(e.target.classList.contains('stt')){if(e.target.textContent==='')e.target.innerHTML='';later()}});
+  sl.addEventListener('paste',function(e){if(!e.target.closest('.stt'))return;var t=e.clipboardData&&e.clipboardData.getData('text/plain');e.preventDefault();if(t)document.execCommand('insertText',false,t)});
+  sl.addEventListener('click',function(e){
+    var el=e.target.closest('.nstk');if(!el)return;var o=sById(el.dataset.id);if(!o)return;
+    var c=e.target.closest('.cl');if(c){o.c=c.dataset.c;sPlace(o,(page.clientWidth||300)/LW);later();return}
+    if(e.target.closest('.stdel'))sRm(o);
+  });
+  sl.addEventListener('focusin',function(e){var el=e.target.closest&&e.target.closest('.nstk');if(el)setSel(el.dataset.id)});
+  sl.addEventListener('pointerdown',function(e){
+    var el=e.target.closest('.nstk');if(!el||NT.mode==='draw')return;
+    var o=sById(el.dataset.id);if(!o)return;setSel(o.id);
+    if(e.target.closest('.stbar'))return;
+    var hd=e.target.closest('.rh');if(!hd&&!e.target.closest('.sth'))return;
+    e.preventDefault();try{e.target.setPointerCapture(e.pointerId)}catch(x){}
+    gs={o:o,mode:hd?'se':'mv',x:e.clientX,y:e.clientY,ox:o.x,oy:o.y,ow:o.w,oh:o.h,id:e.pointerId,moved:false};
+  });
+  sl.addEventListener('pointermove',function(e){
+    var g=gs;if(!g||e.pointerId!==g.id)return;
+    var sc=(page.clientWidth||300)/LW,dx=(e.clientX-g.x)/sc,dy=(e.clientY-g.y)/sc,o=g.o;g.moved=true;
+    if(g.mode==='mv'){o.x=Math.max(0,Math.min(LW-o.w,g.ox+dx));o.y=Math.max(0,g.oy+dy)}
+    else{o.w=Math.max(120,Math.min(LW-o.x,g.ow+dx));o.h=Math.max(100,g.oh+dy)}
+    sPlace(o,sc);
+  });
+  function endStk(e){
+    var g=gs;if(!g||e.pointerId!==g.id)return;gs=null;if(!g.moved)return;
+    var o=g.o;if(o.w>o.cw||o.h>o.ch){var old=o.cv;o.cw=Math.max(o.cw,Math.ceil(o.w));o.ch=Math.max(o.ch,Math.ceil(o.h));sCanvas(o,old);sPlace(o,(page.clientWidth||300)/LW)}
+    fit();later();
+  }
+  sl.addEventListener('pointerup',endStk);sl.addEventListener('pointercancel',endStk);
+  lc.querySelector('#nstk').addEventListener('click',putStk);
   layer.addEventListener('click',function(e){var b=e.target.closest('.imgx');if(!b)return;var o=byId(b.closest('.nimg').dataset.id);if(o)rm(o)});
   layer.addEventListener('focusin',function(e){if(e.target.classList&&e.target.classList.contains('nimg'))setSel(e.target.dataset.id)});
   layer.addEventListener('keydown',function(e){
@@ -1371,6 +1470,7 @@ function initNote(lc,d){
     NT.mode=m;lc.querySelectorAll('.nm').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===m)});
     lc.querySelector('#ndraw').hidden=m!=='draw';cv.classList.toggle('on',m==='draw');page.classList.toggle('dm',m==='draw');
     if(m==='draw'){setSel(null);ned.blur();ned.setAttribute('contenteditable','false')}else ned.setAttribute('contenteditable','true');
+    stks.forEach(function(o){if(m==='draw')o.tx.blur();o.tx.setAttribute('contenteditable',m==='draw'?'false':'true')});
   }
   lc.querySelectorAll('.nm').forEach(function(b){b.addEventListener('click',function(){setMode(b.dataset.m)})});
   function paintTools(){
@@ -1381,26 +1481,34 @@ function initNote(lc,d){
   lc.querySelectorAll('.nto').forEach(function(b){b.addEventListener('click',function(){NT.tool=b.dataset.t;paintTools()})});
   lc.querySelectorAll('.cl').forEach(function(b){b.addEventListener('click',function(){NT.col=b.dataset.c;if(NT.tool==='er')NT.tool='pen';paintTools()})});
   lc.querySelector('#nsz').addEventListener('input',function(e){NT.sz[NT.tool]=+e.target.value});
-  function copyCv(){var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);return t}
+  function copyCv(c){c=c||cv;var t=document.createElement('canvas');t.width=c.width;t.height=c.height;t.getContext('2d').drawImage(c,0,0);return t}
   function qSize(q){return q.full?q.full.width*q.full.height*4:q.r.w*q.r.h*4}
   function trimUndo(){var tot=0;undo.forEach(function(q){tot+=qSize(q)});while(undo.length>1&&(undo.length>25||tot>48e6)){tot-=qSize(undo.shift())}}
   function snap(){undo.push({full:copyCv()});trimUndo()}
-  function ensureBase(){if(!base||base.width!==cv.width||base.height!==cv.height)base=copyCv();return base}
-  function rectOf(bb,w){var pad=w/2+4,x=Math.max(0,Math.floor((bb.x0-pad)*K)),y=Math.max(0,Math.floor((bb.y0-pad)*K)),x2=Math.min(cv.width,Math.ceil((bb.x1+pad)*K)),y2=Math.min(cv.height,Math.ceil((bb.y1+pad)*K));return {x:x,y:y,w:Math.max(0,x2-x),h:Math.max(0,y2-y)}}
+  /* g — поверхность для рисования: M (страница) или стикер */
+  function ensureBase(g){if(!g.base||g.base.width!==g.cv.width||g.base.height!==g.cv.height)g.base=copyCv(g.cv);return g.base}
+  function rectOf(bb,w,g){var c=(g||M).cv,pad=w/2+4,x=Math.max(0,Math.floor((bb.x0-pad)*K)),y=Math.max(0,Math.floor((bb.y0-pad)*K)),x2=Math.min(c.width,Math.ceil((bb.x1+pad)*K)),y2=Math.min(c.height,Math.ceil((bb.y1+pad)*K));return {x:x,y:y,w:Math.max(0,x2-x),h:Math.max(0,y2-y)}}
   function putRaw(t){cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(0,0,cv.width,cv.height);if(t)cx.drawImage(t,0,0);cx.restore()}
-  function patchBack(c,r){
-    cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(r.x,r.y,r.w,r.h);cx.drawImage(c,r.x,r.y);cx.restore();
-    if(base&&base.width===cv.width&&base.height===cv.height){var g=base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(c,r.x,r.y)}
+  function patchBack(c,r,G){
+    var x=G.cx;x.save();x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(c,r.x,r.y);x.restore();
+    if(G.base&&G.base.width===G.cv.width&&G.base.height===G.cv.height){var g=G.base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(c,r.x,r.y)}
   }
-  function restoreRect(s,r){cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(r.x,r.y,r.w,r.h);cx.drawImage(s.base,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);cx.restore()}
-  lc.querySelector('#nun').addEventListener('click',function(){if(!undo.length)return;var q=undo.pop();if(q.full){putRaw(q.full);base=q.full}else patchBack(q.c,q.r);ink=true;later(1500)});
-  lc.querySelector('#ncl').addEventListener('click',function(){snap();putRaw(null);base=null;ink=false;later(1500)});
+  function restoreRect(s,r){var x=s.g.cx;x.save();x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(s.base,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);x.restore()}
+  lc.querySelector('#nun').addEventListener('click',function(){
+    while(undo.length&&undo[undo.length-1].g&&undo[undo.length-1].g.dead)undo.pop();
+    if(!undo.length)return;var q=undo.pop();
+    if(q.full){putRaw(q.full);M.base=q.full;ink=true}else{patchBack(q.c,q.r,q.g);if(q.g===M)ink=true;else q.g.ink=true}
+    later(1500);
+  });
+  lc.querySelector('#ncl').addEventListener('click',function(){snap();putRaw(null);M.base=null;ink=false;later(1500)});
   function pt(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*LW/r.width,y:(e.clientY-r.top)*LH/r.height}}
+  function spt(s,e){var p=pt(e);return {x:p.x-s.ox,y:p.y-s.oy}}
+  function stkAt(p){for(var i=stks.length-1;i>=0;i--){var o=stks[i];if(p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h)return o}return null}
   function wd(s){return s.pen&&s.tool==='pen'?s.w*(0.35+s.pr*1.3):s.w}
   function grow2(s,p){var b=s.bb;if(p.x<b.x0)b.x0=p.x;if(p.x>b.x1)b.x1=p.x;if(p.y<b.y0)b.y0=p.y;if(p.y>b.y1)b.y1=p.y}
-  function setup(s){cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.c;cx.fillStyle=s.c;cx.globalCompositeOperation=s.tool==='er'?'destination-out':'source-over';cx.globalAlpha=1}
+  function setup(s){var cx=s.g.cx;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.c;cx.fillStyle=s.c;cx.globalCompositeOperation=s.tool==='er'?'destination-out':'source-over';cx.globalAlpha=1}
   function mark(s){
-    var r=rectOf(s.bb,s.w);restoreRect(s,r);
+    var cx=s.g.cx,r=rectOf(s.bb,s.w,s.g);restoreRect(s,r);
     cx.globalAlpha=.4;cx.globalCompositeOperation='source-over';cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.c;cx.lineWidth=s.w;cx.beginPath();cx.moveTo(s.pts[0].x,s.pts[0].y);
     for(var i=1;i<s.pts.length-1;i++){var m={x:(s.pts[i].x+s.pts[i+1].x)/2,y:(s.pts[i].y+s.pts[i+1].y)/2};cx.quadraticCurveTo(s.pts[i].x,s.pts[i].y,m.x,m.y)}
     var l=s.pts[s.pts.length-1];cx.lineTo(l.x,l.y);if(s.pts.length===1)cx.lineTo(l.x+.01,l.y);cx.stroke();cx.globalAlpha=1;
@@ -1428,15 +1536,15 @@ function initNote(lc,d){
   function tAvg(){var a=0,n=0,k;for(k in tch){a+=tch[k];n++}return n?a/n:0}
   function paintDot(s){
     if(s.painted||stroke!==s)return;s.painted=true;clearTimeout(s.timer);
-    if(s.tool==='mk'){mark(s)}else{setup(s);cx.beginPath();cx.arc(s.lp.x,s.lp.y,wd(s)/2,0,6.2832);cx.fill()}
+    if(s.tool==='mk'){mark(s)}else{var cx=s.g.cx;setup(s);cx.beginPath();cx.arc(s.lp.x,s.lp.y,wd(s)/2,0,6.2832);cx.fill()}
   }
-  function abortStroke(){var s=stroke;if(!s)return;clearTimeout(s.timer);if(s.painted)restoreRect(s,rectOf(s.bb,s.w*1.8));stroke=null}
+  function abortStroke(){var s=stroke;if(!s)return;clearTimeout(s.timer);if(s.painted)restoreRect(s,rectOf(s.bb,s.w*1.8,s.g));stroke=null}
   /* добавить точку к штриху: лёгкое сглаживание дрожания + сглаженный нажим */
   function addPt(s,raw,pr,final){
     var dx=raw.x-s.sp.x,dy=raw.y-s.sp.y,d=Math.sqrt(dx*dx+dy*dy),a=final?1:Math.min(1,s.al+d/9),p={x:s.sp.x+dx*a,y:s.sp.y+dy*a};
     s.sp=p;s.pr+=(pr-s.pr)*(final?0:0.3);grow2(s,p);
     if(s.tool==='mk'){s.pts.push(p);return}
-    setup(s);var m={x:(s.lp.x+p.x)/2,y:(s.lp.y+p.y)/2};
+    var cx=s.g.cx;setup(s);var m={x:(s.lp.x+p.x)/2,y:(s.lp.y+p.y)/2};
     cx.beginPath();cx.moveTo(s.lm.x,s.lm.y);cx.quadraticCurveTo(s.lp.x,s.lp.y,m.x,m.y);cx.lineWidth=wd(s);cx.stroke();s.lp=p;s.lm=m;
   }
   cv.addEventListener('contextmenu',function(e){e.preventDefault()});
@@ -1459,9 +1567,12 @@ function initNote(lc,d){
     }
     if(stroke)return;
     e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}
-    var p=pt(e);if(p.y>LH-40){grow(LH+400);p=pt(e)}
+    var p=pt(e),so=stkAt(p),G=M,ox=0,oy=0;
+    if(so){G=so;ox=so.x;oy=so.y;p={x:p.x-ox,y:p.y-oy}}else if(p.y>LH-40){grow(LH+400);p=pt(e)}
     var tl=(e.pointerType==='pen'&&((e.buttons&32)||e.button===5))?'er':NT.tool,pen=e.pointerType==='pen';
-    var s={id:e.pointerId,touch:touch,pen:pen,tool:tl,w:NT.sz[tl],c:inkCol(),pts:[p],lp:p,lm:p,sp:p,al:pen?0.6:0.4,pr:(pen&&e.pressure>0)?e.pressure:0.5,painted:false,timer:null,base:ensureBase(),bb:{x0:p.x,y0:p.y,x1:p.x,y1:p.y}};
+    /* на светлом стикере «авто»-чернила всегда тёмные */
+    var col=so&&NT.col==='auto'?'#16233B':inkCol();
+    var s={id:e.pointerId,g:G,ox:ox,oy:oy,touch:touch,pen:pen,tool:tl,w:NT.sz[tl],c:col,pts:[p],lp:p,lm:p,sp:p,al:pen?0.6:0.4,pr:(pen&&e.pressure>0)?e.pressure:0.5,painted:false,timer:null,base:ensureBase(G),bb:{x0:p.x,y0:p.y,x1:p.x,y1:p.y}};
     stroke=s;
     if(touch)s.timer=setTimeout(function(){paintDot(s)},90);else paintDot(s);
   });
@@ -1479,7 +1590,7 @@ function initNote(lc,d){
     var s=stroke;if(!s||e.pointerId!==s.id)return;
     paintDot(s);
     var ev=e.getCoalescedEvents?e.getCoalescedEvents():[e];if(!ev.length)ev=[e];
-    ev.forEach(function(q){addPt(s,pt(q),(s.pen&&q.pressure>0)?q.pressure:0.5)});
+    ev.forEach(function(q){addPt(s,spt(s,q),(s.pen&&q.pressure>0)?q.pressure:0.5)});
     if(s.tool==='mk')mark(s);
   });
   function endPtr(e){
@@ -1492,22 +1603,23 @@ function initNote(lc,d){
     }
     else if(e.pointerType==='pen')penDown=false;
     var s=stroke;if(!s||e.pointerId!==s.id)return;
-    finishStroke(s,e.type==='pointerup'?pt(e):null);
+    finishStroke(s,e.type==='pointerup'?spt(s,e):null);
   }
   function finishStroke(s,fp){
     paintDot(s);
     if(fp){var ld=Math.hypot(fp.x-s.sp.x,fp.y-s.sp.y);if(ld>0.4)addPt(s,fp,s.pr,true);if(s.tool==='mk')mark(s)}
-    cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
+    var cx=s.g.cx;cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
     var l=s.tool==='mk'?s.pts[s.pts.length-1]:s.lp;
     /* undo = только заплатка вокруг штриха, а не копия всего холста */
-    var r=rectOf(s.bb,s.w*1.8);
+    var r=rectOf(s.bb,s.w*1.8,s.g);
     if(r.w>0&&r.h>0){
       var pc=document.createElement('canvas');pc.width=r.w;pc.height=r.h;pc.getContext('2d').drawImage(s.base,r.x,r.y,r.w,r.h,0,0,r.w,r.h);
-      undo.push({r:r,c:pc});trimUndo();
-      var g=s.base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(cv,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);
+      undo.push({r:r,c:pc,g:s.g});trimUndo();
+      var g=s.base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(s.g.cv,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);
     }
-    if(l.y>LH-260)grow(LH+400);
-    stroke=null;ink=true;later(2500);
+    stroke=null;
+    if(s.g===M){if(l.y>LH-260)grow(LH+400);ink=true}else s.g.ink=true;
+    later(2500);
   }
   cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
   var more=lc.querySelector('#nmore');
