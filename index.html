@@ -279,16 +279,16 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 .chip.g{background:var(--line)!important;color:var(--muted)!important}
 .calw{position:relative}
 .ffw{position:sticky;top:calc(18px + env(safe-area-inset-top,0px));height:0;z-index:20}
-.ffab{position:absolute;right:-6px;top:-14px;width:40px;height:40px;border-radius:50%;border:2px solid #F5B301;background:var(--surface);color:#E0A100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);font:700 11px/1 Onest,system-ui,sans-serif}
+.ffab{position:absolute;right:4px;top:4px;width:40px;height:40px;border-radius:50%;border:2px solid #F5B301;background:var(--surface);color:#E0A100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);font:700 11px/1 Onest,system-ui,sans-serif}
 .ffab span{font-size:14px;line-height:1}.ffab b{font-size:11px;color:var(--ink)}
 .ffab.empty{opacity:.55;box-shadow:none}
-.ffab[aria-expanded="true"]{background:#F5B301;color:#fff}.ffab[aria-expanded="true"] b{color:#fff}
-.ffpop{position:absolute;right:-6px;top:32px;width:min(300px,calc(100vw - 40px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
-.ffh{font-weight:700;color:#E0A100;margin:0 0 4px}
-.ffi{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);color:var(--ink);font:500 14px Onest,system-ui,sans-serif;padding:8px 2px;cursor:pointer;min-height:44px}
-.ffi:first-of-type{border-top:0}
-.ffi .dot{margin-top:5px}.ffi .t{flex:1;min-width:0;overflow-wrap:anywhere}
-.ffgo{width:100%;margin-top:6px;font-size:14px}
+.ffs{position:absolute;right:4px;top:4px;border-radius:50%;border:2px solid #F5B301;background:rgba(245,179,1,.16);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer}
+.ffst{position:absolute;left:50%;top:2px;transform:translateX(-50%);font-size:12px;color:#E0A100;pointer-events:none}
+.ffb{position:absolute;border-radius:50%;border:0;color:#fff;padding:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset -3px -4px 8px rgba(0,0,0,.22),inset 3px 3px 6px rgba(255,255,255,.25),0 2px 4px rgba(0,0,0,.2);font-family:Onest,system-ui,sans-serif;font-weight:700;line-height:1.1;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.ffb span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;max-width:100%}
+.ffb small{font-size:.85em;font-weight:600;opacity:.95}
+.ffb.sch{opacity:.55}
+.ffb.dragging{opacity:.25}
 .gcb{min-height:36px;min-width:36px;padding:0 8px;margin-right:auto;margin-left:8px;font-size:18px}
 .gcb.spin{animation:gsp 1s linear infinite}.gcb.bad{border-color:#E4572E;color:#E4572E}
 @keyframes gsp{to{transform:rotate(360deg)}}
@@ -498,23 +498,77 @@ function drawMonth(){
   }
   document.getElementById('cal').innerHTML='<div class="mg">'+h+'</div>';
 }
-/* плавающий кружок «Супер-фокус» в углу календаря */
-var FF={open:false};
+/* плавающий шар «Супер-фокус» в углу календаря: шарики можно перетащить на время дня */
+var FF={min:(function(){try{return localStorage.getItem('planner-ffmin')==='1'}catch(e){return false}})(),drag:null,noClick:0};
+var FFL={1:[[.5,.55]],2:[[.29,.55],[.71,.55]],3:[[.3,.44],[.7,.44],[.5,.76]],4:[[.3,.37],[.7,.37],[.3,.71],[.7,.71]],5:[[.5,.26],[.24,.48],[.76,.48],[.34,.77],[.66,.77]]},FFD={1:.56,2:.39,3:.37,4:.34,5:.31};
+function ffSave(){try{localStorage.setItem('planner-ffmin',FF.min?'1':'0')}catch(e){}}
 function drawFocus(){
   var w=document.getElementById('ffw');if(!w)return;
-  var fl=bagActive().filter(function(b){return b.focus}),t0=ymd(new Date());
-  var item=function(b){
-    var t=b.tid&&find(b.tid),st=bStat(b)==='sched'&&t?'в календаре: '+fd(t.date)+', '+t.start:(b.due?(b.due<t0?'просрочено':'срок до '+fd(b.due)):'в мешке');
-    return '<button type="button" class="ffi" data-act="ffopen" data-id="'+b.id+'"><span class="dot" style="background:'+sp(b.sphere).c+'"></span><span class="t">'+esc(b.title)+'<br><span class="lbl">'+st+'</span></span></button>';
-  };
-  w.innerHTML='<button type="button" class="ffab'+(fl.length?'':' empty')+'" data-act="ffab" aria-expanded="'+FF.open+'" aria-label="Задачи в фокусе" title="Задачи в фокусе"><span aria-hidden="true">★</span><b>'+fl.length+'</b></button>'+
-  (FF.open?'<div class="ffpop" role="dialog" aria-label="Задачи в фокусе"><div class="ffh"><span aria-hidden="true">★</span> <span>Супер-фокус</span></div>'+
-  (fl.length?fl.map(item).join(''):'<p class="lbl" style="margin:4px 0 8px">Пусто. В «Мешке задач» перетащите важные шарики в шар «Супер-фокус».</p>')+
-  '<button type="button" class="ghost ffgo" data-act="ffbag">Открыть мешок</button></div>':'');
+  var fl=bagActive().filter(function(b){return b.focus}).slice(0,5),n=fl.length;
+  if(!n){w.innerHTML='<button type="button" class="ffab empty" data-act="ffbag" aria-label="Супер-фокус пуст: открыть мешок" title="Супер-фокус пуст: открыть мешок"><span aria-hidden="true">★</span><b>0</b></button>';return}
+  if(FF.min){w.innerHTML='<button type="button" class="ffab" data-act="ffmax" aria-label="Показать задачи в фокусе" title="Показать задачи в фокусе"><span aria-hidden="true">★</span><b>'+n+'</b></button>';return}
+  var D=Math.round(Math.min(176,Math.max(140,window.innerWidth*0.44))),bd=Math.round(D*FFD[n]),fs=Math.max(9,Math.min(13,bd*0.19));
+  w.innerHTML='<div class="ffs" data-act="ffmin" style="width:'+D+'px;height:'+D+'px" title="Свернуть" aria-label="Супер-фокус">'+
+  '<span class="ffst" aria-hidden="true">★</span>'+
+  fl.map(function(b,i){
+    var xy=FFL[n][i],t=b.tid&&find(b.tid),sch=bStat(b)==='sched'&&t;
+    return '<button type="button" class="ffb'+(sch?' sch':'')+'" data-act="ffopen" data-id="'+b.id+'" title="'+esc(b.title)+'" style="width:'+bd+'px;height:'+bd+'px;left:'+(xy[0]*D-bd/2)+'px;top:'+(xy[1]*D-bd/2)+'px;background:'+sp(b.sphere).c+';font-size:'+fs+'px"><span>'+esc(b.title)+'</span>'+(sch?'<small>'+(t.date===ymd(new Date())?t.start:pd(t.date).getDate()+'.'+(pd(t.date).getMonth()+1))+'</small>':'')+'</button>';
+  }).join('')+'</div>';
 }
-document.addEventListener('pointerdown',function(e){if(FF.open&&!(e.target.closest&&e.target.closest('#ffw'))){FF.open=false;drawFocus()}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&FF.open){FF.open=false;drawFocus()}});
+/* куда упадёт шарик: день и время в сетке или день в месяце */
+function ffSlot(x,y){
+  var cal=document.getElementById('cal');if(!cal)return null;
+  if(view==='month'){var el=document.elementFromPoint(x,y),mc=el&&el.closest&&el.closest('.mc');return mc?{d:mc.dataset.d,m:9*60,month:true}:null}
+  var tl=cal.querySelector('.tl');if(!tl)return null;var r=tl.getBoundingClientRect();
+  if(x<r.left+44||x>r.right||y<r.top||y>r.bottom)return null;
+  var cols=curDates.length,i=Math.max(0,Math.min(cols-1,Math.floor((x-r.left-44)/(r.width-44)*cols)));
+  var m=Math.round((curLo+(y-r.top)/PX)/15)*15;m=Math.max(0,Math.min(1440-30,m));
+  return {d:curDates[i],i:i,cols:cols,m:m};
+}
+function ffPreview(sl,b){
+  var tl=document.querySelector('#cal .tl'),pv=document.getElementById('ffpv');
+  if(!sl||sl.month||!tl){if(pv)pv.remove();return}
+  if(!pv||pv.parentNode!==tl){if(pv)pv.remove();pv=document.createElement('div');pv.id='ffpv';pv.className='nw';tl.appendChild(pv)}
+  var t=b.tid&&find(b.tid),du=t?t.dur:30;
+  pv.style.top=((sl.m-curLo)*PX)+'px';pv.style.height=(du*PX)+'px';pv.style.left='calc(44px + (100% - 44px)*'+(sl.i/sl.cols)+')';pv.style.width='calc((100% - 44px)/'+sl.cols+' - 3px)';
+  pv.textContent=hm(sl.m)+' '+b.title;
+}
+function ffSched(b,sl){
+  var t=b.tid&&find(b.tid),st=hm(sl.m);
+  if(t){t.date=sl.d;t.start=st}
+  else{t={id:uid(),title:b.title,sphere:b.sphere,start:st,dur:30,date:sl.d,repeat:false,fromBag:true};S.tasks.push(t);b.tid=t.id}
+  save();drawMain();vToast('Запланировано: '+b.title+', '+fd(sl.d)+', '+st,3000);
+}
+function ffEnd(){var g=FF.drag;FF.drag=null;if(!g)return;clearInterval(g.as);if(g.gh)g.gh.remove();var pv=document.getElementById('ffpv');if(pv)pv.remove();if(g.el)g.el.classList.remove('dragging')}
+document.addEventListener('pointerdown',function(e){
+  var el=e.target.closest&&e.target.closest('.ffb');if(!el||(e.pointerType==='mouse'&&e.button!==0))return;
+  ffEnd();FF.drag={id:el.dataset.id,el:el,pid:e.pointerId,x:e.clientX,y:e.clientY,on:false};
+});
+document.addEventListener('pointermove',function(e){
+  var g=FF.drag;if(!g||e.pointerId!==g.pid)return;
+  if(!g.on){
+    if(Math.hypot(e.clientX-g.x,e.clientY-g.y)<6)return;
+    var b=bfind(g.id);if(!b){ffEnd();return}
+    g.on=true;g.b=b;var el=g.el;el.classList.add('dragging');
+    var gh=document.createElement('div'),sz=Math.max(56,el.offsetWidth);gh.className='ghost-ball';gh.style.width=gh.style.height=sz+'px';gh.style.background=sp(b.sphere).c;gh.style.fontSize='11px';gh.style.padding='6px';gh.style.textAlign='center';gh.style.overflow='hidden';gh.textContent=b.title;document.body.appendChild(gh);g.gh=gh;
+    /* прокрутка страницы, когда шарик у края экрана */
+    g.as=setInterval(function(){var y=g.cy||0,h=window.innerHeight;if(y<70)window.scrollBy(0,-12);else if(y>h-70)window.scrollBy(0,12);else return;var sl=ffSlot(g.cx,g.cy);ffPreview(sl,g.b)},30);
+  }
+  e.preventDefault();g.cx=e.clientX;g.cy=e.clientY;
+  g.gh.style.left=e.clientX+'px';g.gh.style.top=e.clientY+'px';
+  ffPreview(ffSlot(e.clientX,e.clientY),g.b);
+},{passive:false});
+function ffUp(e){
+  var g=FF.drag;if(!g||e.pointerId!==g.pid)return;
+  if(!g.on){FF.drag=null;return}
+  FF.noClick=Date.now()+350;
+  var sl=e.type==='pointerup'?ffSlot(e.clientX,e.clientY):null,b=g.b;ffEnd();
+  if(sl&&b)ffSched(b,sl);
+}
+document.addEventListener('pointerup',ffUp);document.addEventListener('pointercancel',ffUp);
+document.addEventListener('touchmove',function(e){if(FF.drag&&FF.drag.on)e.preventDefault()},{passive:false});
 document.getElementById('bdlg').addEventListener('close',function(){if(tab==='day'&&document.getElementById('cal'))drawMain()});
+window.addEventListener('resize',function(){if(tab==='day'&&!FF.drag)drawFocus()});
 function zoneBox(id){
   var s=sp(id),zs=S.zones.filter(function(z){return z.sphere===id}).sort(function(a,b){return a.s-b.s});
   var last=S.zones.length?Math.max.apply(null,S.zones.map(function(z){return z.e})):mins(S.wake);
@@ -648,9 +702,10 @@ document.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b)return;
   var a=b.dataset.act,id=b.dataset.id;
   if(a==='tab'){tab=b.dataset.tab;cdel='';render()}
-  else if(a==='ffab'){FF.open=!FF.open;drawFocus()}
-  else if(a==='ffopen'){FF.open=false;drawFocus();openBall(id)}
-  else if(a==='ffbag'){FF.open=false;tab='bag';cdel='';render()}
+  else if(a==='ffopen'){if(Date.now()>FF.noClick)openBall(id)}
+  else if(a==='ffmin'){if(Date.now()>FF.noClick){FF.min=true;ffSave();drawFocus()}}
+  else if(a==='ffmax'){FF.min=false;ffSave();drawFocus()}
+  else if(a==='ffbag'){tab='bag';cdel='';render()}
   else if(a==='prev')step(-1);else if(a==='next')step(1);
   else if(a==='today'){day=ymd(new Date());drawMain()}
   else if(a==='view'){view=b.dataset.v;if(view==='day')day=ymd(new Date());drawMain()}
@@ -1097,9 +1152,9 @@ var DICT={};
 ["Добавить стикер","Add sticker","Dodaj karteczkę","Додати стікер"],
 ["Удалить стикер","Delete sticker","Usuń karteczkę","Видалити стікер"],
 ["Цвет стикера","Sticker color","Kolor karteczki","Колір стікера"],
-["Задачи в фокусе","Focus tasks","Zadania w fokusie","Завдання у фокусі"],
-["Пусто. В «Мешке задач» перетащите важные шарики в шар «Супер-фокус».","Empty. In the “Task bag”, drag important balls into the “Super focus” sphere.","Pusto. W „Worku zadań” przeciągnij ważne kulki do kuli „Super fokus”.","Порожньо. У «Мішку завдань» перетягніть важливі кульки в кулю «Супер-фокус»."],
-["Открыть мешок","Open the bag","Otwórz worek","Відкрити мішок"],
+["Супер-фокус пуст: открыть мешок","Super focus is empty: open the bag","Super fokus jest pusty: otwórz worek","Супер-фокус порожній: відкрити мішок"],
+["Показать задачи в фокусе","Show focus tasks","Pokaż zadania w fokusie","Показати завдання у фокусі"],
+["Свернуть","Collapse","Zwiń","Згорнути"],
 ["Уменьшить текст","Smaller text","Mniejszy tekst","Зменшити текст"],
 ["Увеличить текст","Larger text","Większy tekst","Збільшити текст"],
 ["Перетащить стикер","Drag sticker","Przeciągnij karteczkę","Перетягнути стікер"],
@@ -1226,7 +1281,7 @@ var RX=[
 [/^в календаре: (.+), (\d\d:\d\d)$/,"in calendar: $1, $2","w kalendarzu: $1, $2","в календарі: $1, $2"],
 [/^осталось (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 left","zostało $1 $2","залишилось $1 $2"],
 [/^просрочено на (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 overdue","po terminie o $1 $2","прострочено на $1 $2"],
-[/^срок до (.+)$/,"due $1","termin: $1","термін до $1"],
+[/^Запланировано: (.+)$/,"Scheduled: $1","Zaplanowano: $1","Заплановано: $1"],
 [/^просрочено (\d+)$/,"overdue $1","po terminie: $1","прострочено $1"],
 [/^Прошло (\d+)% срока$/,"$1% of the term has passed","Minęło $1% terminu","Минуло $1% терміну"],
 [/^В мешке (\d+) из 50$/,"In the bag: $1 of 50","W worku: $1 z 50","У мішку: $1 з 50"],
@@ -2075,7 +2130,7 @@ async function sFetch(key,m){
 }
 function softRender(){
   var a=document.activeElement;
-  if(NB&&NB.active&&NB.active()){clearTimeout(SYN.rt);SYN.rt=setTimeout(softRender,2500);return}
+  if((NB&&NB.active&&NB.active())||FF.drag){clearTimeout(SYN.rt);SYN.rt=setTimeout(softRender,2500);return}
   if(document.querySelector('dialog[open]')||(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))){clearTimeout(SYN.rt);SYN.rt=setTimeout(softRender,2500);return}
   render();runTr();
 }
