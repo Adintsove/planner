@@ -2148,6 +2148,8 @@ function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
   e.dataset.st=st;
+  /* на сайте показываем код ошибки облака, чтобы понять причину */
+  if(st==='err'&&WEB&&SYN.ecode){var c=document.createElement('span');c.className='syncode';c.textContent=' ['+SYN.ecode+']';e.appendChild(c)}
 }
 function sApply(key,json){
   var v=JSON.parse(json);
@@ -2261,7 +2263,7 @@ async function sPush(){
     }
     if(any)try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
     setSyn('ok');SYN.err='';SYN.fail=0;
-  }catch(e){SYN.err=(e&&e.code)||'err';SYN.fail=(SYN.fail||0)+1;setSyn('err')}
+  }catch(e){SYN.err=(e&&e.code)||'err';SYN.ecode=(e&&e.code)||'';SYN.fail=(SYN.fail||0)+1;setSyn('err')}
   finally{SYN.busy=false}
 }
 /* повторы с нарастающей паузой: 4, 10, 20, 40, 80, 120 секунд */
@@ -2279,8 +2281,8 @@ function synStart(db,id){
     var base=db.doc('data/users/'+id+'/sync');SYN.P=base.collection('p');SYN.C=base.collection('c');SYN.on=true;SYN.ready=false;setSyn('sync');
     SYN.sub=function(){
       clearTimeout(SYN.st);try{if(typeof SYN.un==='function')SYN.un()}catch(x){}SYN.un=null;
-      var lost=function(){
-        SYN.sf=(SYN.sf||0)+1;setSyn('err');
+      var lost=function(e){
+        SYN.ecode=(e&&e.code)||SYN.ecode||'';SYN.sf=(SYN.sf||0)+1;setSyn('err');
         clearTimeout(SYN.st);SYN.st=setTimeout(SYN.sub,backoff(SYN.sf));
       };
       try{
