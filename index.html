@@ -376,7 +376,7 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 /* ===== Версия-сайт (GitHub Pages): вход и облако через Firebase, календарь напрямую через Google ===== */
 var WEB=!window.claude&&!/claude\.ai|claudeusercontent/.test(location.hostname);
 /* Настройки проекта Firebase и Client ID Google — не секрет, данные защищают правила Firestore */
-var FB_CFG=null;
+var FB_CFG={apiKey:'AIzaSyBg3Nt7kB-b4WtRaaE6EB7EMZQqjYetBZk',authDomain:'adn-planner.firebaseapp.com',projectId:'adn-planner',storageBucket:'adn-planner.firebasestorage.app',messagingSenderId:'814690311076',appId:'1:814690311076:web:aa7eea28d563c68cecbf31'};
 var GC_CLIENT='';
 var SP=[{id:'family',n:'Семья',c:'#D9482B'},{id:'friends',n:'Друзья',c:'#B97A00'},{id:'work',n:'Дело',c:'#2A7BA6'},{id:'body',n:'Тело и ум',c:'#2E9A62'},{id:'love',n:'Отношения',c:'#8A4FD0'}];
 var PX=1.2,KEY='planner-v1',WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
