@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;800&display=swap">
+<style>body{margin:0;background:#EDF1F5;font-family:Onest,system-ui,sans-serif;color:#16233B}
+.g{display:grid;grid-template-columns:repeat(4,260px);gap:20px;padding:28px}
+.c{background:#fff;border-radius:18px;padding:22px 12px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.n{font-size:14px;font-weight:500;opacity:.75;text-align:center}
+.mono{width:130px;height:130px;border-radius:29px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:49px;letter-spacing:-.03em;box-sizing:border-box}
+.mono i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-left:3px;align-self:flex-end;margin-bottom:45px}
+.row{display:flex;gap:10px;align-items:center}
+.mono.s{width:40px;height:40px;border-radius:9px;font-size:15px}.mono.s i{width:5px;height:5px;margin-bottom:14px;margin-left:1px}
+.dk{background:#0F1624;border-radius:12px;padding:8px 14px}
+</style></head><body><div class="g" id="g"></div>
+<script>
+var P=[
+['1 · Тёмно-синий и жёлтый','#16233B','#FFFFFF','#F5B301'],
+['2 · Светлый и жёлтый','#FFFFFF','#16233B','#F5B301','1px solid #D5DCE6'],
+['3 · Жёлтый и синий','#F5B301','#16233B','#FFFFFF'],
+['4 · Морской и жёлтый','#2E86AB','#FFFFFF','#FFD23F'],
+['5 · Чёрный и коралл','#111111','#FFFFFF','#E4572E'],
+['6 · Фиолетовый и жёлтый','#6C3CF0','#FFFFFF','#FFD23F'],
+['7 · Зелёный и лимон','#1F7A4D','#FFFFFF','#E9F56A'],
+['8 · Графит, строгий','#2B2F36','#FFFFFF','#9AA7BD']];
+g.innerHTML=P.map(function(p){var st='background:'+p[1]+';color:'+p[2]+(p[4]?';border:'+p[4]:'');
+return '<div class="c"><div class="n">'+p[0]+'</div><div class="mono" style="'+st+'">adn<i style="background:'+p[3]+'"></i></div>'+
+'<div class="row"><div class="mono s" style="'+st+'">adn<i style="background:'+p[3]+'"></i></div><div class="dk"><div class="mono s" style="'+st+'">adn<i style="background:'+p[3]+'"></i></div></div></div></div>'}).join('');
+</script></body></html>
