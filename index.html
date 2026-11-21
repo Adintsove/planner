@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ADN Planner</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 512 512&quot;%3E%3Crect width=&quot;512&quot; height=&quot;512&quot; rx=&quot;112&quot; fill=&quot;%232E86AB&quot;/%3E%3Cpath transform=&quot;translate%2854.8 323.6%29 scale%280.193%29&quot; fill=&quot;%23FFFFFF&quot; d=&quot;M218 8Q181 8 148.0 -2.0Q115 -12 89.0 -32.0Q63 -52 48.0 -82.0Q33 -112 33 -152Q33 -209 56.5 -242.5Q80 -276 120.5 -292.5Q161 -309 213.0 -314.0Q265 -319 321 -319H371Q371 -344 361.5 -362.5Q352 -381 333.0 -392.0Q314 -403 286 -403Q266 -403 249.0 -397.5Q232 -392 220.5 -382.5Q209 -373 206 -359H47Q53 -406 75.0 -439.5Q97 -473 131.0 -494.0Q165 -515 206.5 -525.5Q248 -536 292 -536Q370 -536 420.5 -507.0Q471 -478 496.5 -422.0Q522 -366 522 -283V0H377L376 -69Q351 -31 319.0 -15.0Q287 1 259.0 4.5Q231 8 218 8ZM258 -115Q288 -115 314.0 -128.5Q340 -142 356.5 -163.5Q373 -185 373 -210V-218H265Q252 -218 238.0 -215.5Q224 -213 213.5 -207.5Q203 -202 196.5 -192.5Q190 -183 190 -167Q190 -150 199.0 -138.5Q208 -127 223.5 -121.0Q239 -115 258 -115Z M812.0 8Q731.0 8 678.0 -29.5Q625.0 -67 599.0 -128.5Q573.0 -190 573.0 -264Q573.0 -344 602.0 -405.5Q631.0 -467 687.0 -502.0Q743.0 -537 825.0 -537Q853.0 -537 878.5 -531.0Q904.0 -525 926.5 -513.5Q949.0 -502 964.0 -484V-708H1123.0V0H968.0V-53Q949.0 -32 924.5 -19.0Q900.0 -6 872.0 1.0Q844.0 8 812.0 8ZM846.0 -136Q888.0 -136 914.0 -154.5Q940.0 -173 952.5 -202.5Q965.0 -232 965.0 -264Q965.0 -298 952.5 -327.0Q940.0 -356 914.0 -374.0Q888.0 -392 846.0 -392Q803.0 -392 777.5 -372.5Q752.0 -353 741.5 -323.0Q731.0 -293 731.0 -261Q731.0 -237 737.0 -214.5Q743.0 -192 756.5 -174.5Q770.0 -157 792.0 -146.5Q814.0 -136 846.0 -136Z M1195.0 0V-527H1342.0L1351.0 -473Q1374.0 -499 1402.5 -513.0Q1431.0 -527 1459.5 -532.0Q1488.0 -537 1509.0 -537Q1584.0 -537 1626.5 -503.5Q1669.0 -470 1687.0 -414.0Q1705.0 -358 1705.0 -291V0H1547.0V-274Q1547.0 -295 1543.0 -315.5Q1539.0 -336 1529.5 -353.5Q1520.0 -371 1503.0 -381.5Q1486.0 -392 1459.0 -392Q1424.0 -392 1400.0 -375.0Q1376.0 -358 1365.0 -329.5Q1354.0 -301 1354.0 -266V0Z&quot;/%3E%3Ccircle cx=&quot;423.3&quot; cy=&quot;296.1&quot; r=&quot;27.5&quot; fill=&quot;%23FFD23F&quot;/%3E%3C/svg%3E">
+<meta name="theme-color" content="#2E86AB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ADN Planner">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap">
 <style>
@@ -280,6 +284,12 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 .gad{display:grid;gap:2px;margin:0 0 4px 44px}
 .gad span{display:block;font-size:10.5px;background:var(--line);color:var(--muted);border-radius:5px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip.g{background:var(--line)!important;color:var(--muted)!important}
+#wlc{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.wlcb{max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.wlcb .logo{width:88px;height:88px}.wlcb h2{font-size:26px;font-weight:800}.wlcb p{margin:0;color:var(--muted)}
+.wgo{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:8px}
+.wgo svg{background:#fff;border-radius:50%;padding:3px;width:24px;height:24px;box-sizing:border-box}
+.wskip{width:100%}
 .calw{position:relative}
 .ffw{position:sticky;top:calc(18px + env(safe-area-inset-top,0px));height:0;z-index:20}
 .ffab{position:absolute;right:4px;top:4px;width:40px;height:40px;border-radius:50%;border:2px solid #F5B301;background:var(--surface);color:#E0A100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);font:700 11px/1 Onest,system-ui,sans-serif}
@@ -363,6 +373,11 @@ dialog form{display:flex;flex-direction:column;gap:10px}
   <div class="row"><button class="ghost" type="button" data-act="odone">✓ Выполнено</button><button class="ghost" type="button" data-act="oedit">Изменить</button><button class="ghost" type="button" data-act="ocancel" style="margin-left:auto">Отмена</button></div>
 </form></dialog>
 <script>
+/* ===== Версия-сайт (GitHub Pages): вход и облако через Firebase, календарь напрямую через Google ===== */
+var WEB=!window.claude&&!/claude\.ai|claudeusercontent/.test(location.hostname);
+/* Настройки проекта Firebase и Client ID Google — не секрет, данные защищают правила Firestore */
+var FB_CFG=null;
+var GC_CLIENT='';
 var SP=[{id:'family',n:'Семья',c:'#D9482B'},{id:'friends',n:'Друзья',c:'#B97A00'},{id:'work',n:'Дело',c:'#2A7BA6'},{id:'body',n:'Тело и ум',c:'#2E9A62'},{id:'love',n:'Отношения',c:'#8A4FD0'}];
 var PX=1.2,KEY='planner-v1',WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return {wake:'07:00',bed:'23:00',goals:[],tasks:[],done:{},colors:{}}}
@@ -977,7 +992,7 @@ document.addEventListener('input',function(e){
   document.getElementById('bed').value=S.bed;document.getElementById('sleepv').textContent=fmtSleep(v);
 });
 function drawSettings(){
-  document.getElementById('view').innerHTML='<h2 style="margin:0 0 10px">Настройки</h2>'+langCard()+themeCard()+gcCard()+snapCard()+
+  document.getElementById('view').innerHTML='<h2 style="margin:0 0 10px">Настройки</h2>'+acctCard()+installCard()+langCard()+themeCard()+gcCard()+moveCard()+snapCard()+
     '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Режим дня</h2><div class="row"><label class="field"><span class="lbl">Подъём</span><input type="time" id="wake" value="'+S.wake+'"></label><label class="field"><span class="lbl">Отбой</span><input type="time" id="bed" value="'+S.bed+'"></label></div>'+sleepBlock()+'</div>'+
     lifeCard()+'<h2 style="font-size:16px;margin:16px 0 4px">Время для сфер</h2><p class="lbl" style="margin:0 0 8px">Когда вы ежедневно посвящаете время каждой сфере и в какие дни недели. Эти отрезки показаны цветными полосами в календаре.</p>'+
     S.spheres.map(function(x){var s=sp(x.id);return '<section class="card"><div class="sph"><span class="dot" style="background:'+s.c+'"></span><h2>'+s.n+'</h2></div>'+zoneBox(x.id)+'</section>'}).join('');
@@ -1155,6 +1170,34 @@ var DICT={};
 ["Добавить стикер","Add sticker","Dodaj karteczkę","Додати стікер"],
 ["Удалить стикер","Delete sticker","Usuń karteczkę","Видалити стікер"],
 ["Цвет стикера","Sticker color","Kolor karteczki","Колір стікера"],
+["Войдите, чтобы задачи, цели и заметки были одинаковыми на телефоне, планшете и компьютере.","Sign in to keep tasks, goals and notes the same on your phone, tablet and computer.","Zaloguj się, aby zadania, cele i notatki były takie same na telefonie, tablecie i komputerze.","Увійдіть, щоб завдання, цілі та нотатки були однаковими на телефоні, планшеті й комп’ютері."],
+["Войти через Google","Sign in with Google","Zaloguj się przez Google","Увійти через Google"],
+["Продолжить без входа","Continue without signing in","Kontynuuj bez logowania","Продовжити без входу"],
+["Вход","Sign in","Logowanie","Вхід"],
+["Аккаунт","Account","Konto","Обліковий запис"],
+["Выйти","Sign out","Wyloguj","Вийти"],
+["Вход и облако для этой версии пока не настроены.","Sign-in and cloud are not set up for this version yet.","Logowanie i chmura nie są jeszcze skonfigurowane dla tej wersji.","Вхід і хмару для цієї версії ще не налаштовано."],
+["Данные синхронизируются между устройствами, где вы вошли.","Data syncs between devices where you are signed in.","Dane synchronizują się między urządzeniami, na których jesteś zalogowany.","Дані синхронізуються між пристроями, де ви увійшли."],
+["Войдите, чтобы данные были на всех устройствах.","Sign in to have your data on all devices.","Zaloguj się, aby dane były na wszystkich urządzeniach.","Увійдіть, щоб дані були на всіх пристроях."],
+["Установить приложение","Install the app","Zainstaluj aplikację","Встановити застосунок"],
+["Установить ADN Planner","Install ADN Planner","Zainstaluj ADN Planner","Встановити ADN Planner"],
+["В Safari нажмите «Поделиться», затем «На экран Домой».","In Safari tap “Share”, then “Add to Home Screen”.","W Safari stuknij „Udostępnij”, potem „Do ekranu początkowego”.","У Safari натисніть «Поділитися», потім «На екран Додому»."],
+["В меню браузера выберите «Установить приложение» или «Добавить на главный экран».","In the browser menu choose “Install app” or “Add to Home screen”.","W menu przeglądarki wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”.","У меню браузера виберіть «Встановити застосунок» або «Додати на головний екран»."],
+["Перенос данных","Data transfer","Przenoszenie danych","Перенесення даних"],
+["Сохраните все задачи, цели, мешок и заметки в файл и загрузите его в другой версии приложения. Перед загрузкой делается резервная копия.","Save all tasks, goals, the bag and notes to a file and load it in another version of the app. A backup is made before loading.","Zapisz wszystkie zadania, cele, worek i notatki do pliku i wczytaj go w innej wersji aplikacji. Przed wczytaniem tworzona jest kopia zapasowa.","Збережіть усі завдання, цілі, мішок і нотатки у файл і завантажте його в іншій версії застосунку. Перед завантаженням робиться резервна копія."],
+["Выгрузить данные","Export data","Eksportuj dane","Вивантажити дані"],
+["Загрузить данные","Import data","Importuj dane","Завантажити дані"],
+["Заменить данные этим файлом","Replace data with this file","Zastąp dane tym plikiem","Замінити дані цим файлом"],
+["Это не файл выгрузки ADN Planner","This is not an ADN Planner export file","To nie jest plik eksportu ADN Planner","Це не файл вивантаження ADN Planner"],
+["Файл сохранён","File saved","Plik zapisany","Файл збережено"],
+["Не удалось сохранить файл","Could not save the file","Nie udało się zapisać pliku","Не вдалося зберегти файл"],
+["Выгрузка недоступна в этом окне","Export is unavailable in this window","Eksport jest niedostępny w tym oknie","Вивантаження недоступне в цьому вікні"],
+["Данные загружены","Data loaded","Dane wczytane","Дані завантажено"],
+["Вход пока не настроен","Sign-in is not set up yet","Logowanie nie jest jeszcze skonfigurowane","Вхід ще не налаштовано"],
+["Нет интернета. Попробуйте ещё раз","No internet. Try again","Brak internetu. Spróbuj ponownie","Немає інтернету. Спробуйте ще раз"],
+["Этот адрес не разрешён в настройках Firebase (Authorized domains)","This address is not allowed in Firebase settings (Authorized domains)","Ten adres nie jest dozwolony w ustawieniach Firebase (Authorized domains)","Ця адреса не дозволена в налаштуваннях Firebase (Authorized domains)"],
+["Нажмите «Синхронизировать», чтобы подключить Google Календарь","Tap “Sync” to connect Google Calendar","Stuknij „Synchronizuj”, aby połączyć Kalendarz Google","Натисніть «Синхронізувати», щоб підключити Google Календар"],
+["Google Календарь для этой версии пока не настроен","Google Calendar is not set up for this version yet","Kalendarz Google nie jest jeszcze skonfigurowany dla tej wersji","Google Календар для цієї версії ще не налаштовано"],
 ["Супер-фокус пуст: открыть мешок","Super focus is empty: open the bag","Super fokus jest pusty: otwórz worek","Супер-фокус порожній: відкрити мішок"],
 ["Показать задачи в фокусе","Show focus tasks","Pokaż zadania w fokusie","Показати завдання у фокусі"],
 ["Свернуть","Collapse","Zwiń","Згорнути"],
@@ -1284,6 +1327,8 @@ var RX=[
 [/^в календаре: (.+), (\d\d:\d\d)$/,"in calendar: $1, $2","w kalendarzu: $1, $2","в календарі: $1, $2"],
 [/^осталось (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 left","zostało $1 $2","залишилось $1 $2"],
 [/^просрочено на (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 overdue","po terminie o $1 $2","прострочено на $1 $2"],
+[/^В файле: задач (\d+), шариков (\d+), целей (\d+), дней с заметками (\d+)\.$/,"In the file: $1 tasks, $2 balls, $3 goals, $4 days with notes.","W pliku: zadań $1, kulek $2, celów $3, dni z notatkami $4.","У файлі: завдань $1, кульок $2, цілей $3, днів із нотатками $4."],
+[/^Не удалось войти(.*)$/,"Could not sign in$1","Nie udało się zalogować$1","Не вдалося увійти$1"],
 [/^Запланировано: (.+)$/,"Scheduled: $1","Zaplanowano: $1","Заплановано: $1"],
 [/^просрочено (\d+)$/,"overdue $1","po terminie: $1","прострочено $1"],
 [/^Прошло (\d+)% срока$/,"$1% of the term has passed","Minęło $1% terminu","Минуло $1% терміну"],
@@ -2224,12 +2269,14 @@ function backoff(n){return Math.min(120000,[4000,10000,20000,40000,80000][Math.m
 function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){if(SYN.err)schedPush(backoff(SYN.fail||1));else if(sPending().length)schedPush(2500)})},ms===undefined?2500:ms)}
 var _sv0=save;save=function(){_sv0();schedPush()};
 document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.on){clearTimeout(SYN.tm);sPush()}});
-(async function(){
-  try{
-    if(!window.claude||!claude.use)return;
-    var db=await claude.use('db'),us=await claude.use('user');if(!db||!us)return;
-    var id=await us.id();if(!id)return;
-    var base=db.doc('data/users/'+id+'/sync');SYN.P=base.collection('p');SYN.C=base.collection('c');SYN.on=true;setSyn('sync');
+function synStop(){
+  SYN.on=false;SYN.ready=false;clearTimeout(SYN.st);clearTimeout(SYN.tm);
+  try{if(typeof SYN.un==='function')SYN.un()}catch(x){}SYN.un=null;SYN.P=SYN.C=null;setSyn('off');
+}
+var synWoke=false;
+function synStart(db,id){
+    synStop();
+    var base=db.doc('data/users/'+id+'/sync');SYN.P=base.collection('p');SYN.C=base.collection('c');SYN.on=true;SYN.ready=false;setSyn('sync');
     SYN.sub=function(){
       clearTimeout(SYN.st);try{if(typeof SYN.un==='function')SYN.un()}catch(x){}SYN.un=null;
       var lost=function(){
@@ -2244,13 +2291,189 @@ document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.
       }catch(x){lost()}
     };
     SYN.sub();
+    if(synWoke)return;synWoke=true;
     /* вернулись в приложение или появилась сеть: переподключиться и отправить накопленное */
     function wake(){if(!SYN.on)return;if(SYN.err||SYN.sf||Date.now()-(SYN.snapAt||0)>600000)SYN.sub();SYN.fail=0;schedPush(500)}
     window.addEventListener('online',wake);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)wake()});
     window.addEventListener('pageshow',wake);
+}
+(async function(){
+  try{
+    if(window.claude&&claude.use){
+      var db=await claude.use('db'),us=await claude.use('user');if(!db||!us)return;
+      var id=await us.id();if(!id)return;
+      synStart(db,id);return;
+    }
+    if(WEB)fbInit();
   }catch(e){setSyn('off')}
 })();
+/* ----- вход через Google (Firebase) ----- */
+var ACC={user:null,ready:false},FBV='10.12.2';
+function loadJs(src){return new Promise(function(res,rej){var e=document.createElement('script');e.src=src;e.onload=res;e.onerror=rej;document.head.appendChild(e)})}
+async function fbInit(){
+  if(!FB_CFG){ACC.ready=true;return}
+  try{
+    var b='https://www.gstatic.com/firebasejs/'+FBV+'/';
+    await loadJs(b+'firebase-app-compat.js');await loadJs(b+'firebase-auth-compat.js');await loadJs(b+'firebase-firestore-compat.js');
+    firebase.initializeApp(FB_CFG);
+    var au=firebase.auth();
+    au.getRedirectResult().catch(function(e){welcomeMsg(fbErrT(e))});
+    au.onAuthStateChanged(function(u){
+      ACC.user=u;ACC.ready=true;
+      if(u){welcome(false);synStart(firebase.firestore(),u.uid);gisPreload()}
+      else{synStop();if(!skipLogin())welcome(true)}
+      if(tab==='set'){drawSettings();runTr()}
+    });
+  }catch(e){ACC.ready=true;setSyn('err')}
+}
+function skipLogin(){try{return localStorage.getItem('planner-skiplogin')==='1'}catch(e){return false}}
+function fbErrT(e){var c=e&&e.code||'';if(/popup-closed|cancelled-popup/.test(c))return '';if(/network/.test(c))return 'Нет интернета. Попробуйте ещё раз';if(/unauthorized-domain/.test(c))return 'Этот адрес не разрешён в настройках Firebase (Authorized domains)';return 'Не удалось войти'+(c?' ['+c+']':'')}
+function fbLogin(){
+  if(!window.firebase||!firebase.auth){welcomeMsg('Вход пока не настроен');return}
+  var pr=new firebase.auth.GoogleAuthProvider();pr.setCustomParameters({prompt:'select_account'});
+  firebase.auth().signInWithPopup(pr).catch(function(e){
+    if(e&&/popup-blocked|operation-not-supported/.test(e.code||''))return firebase.auth().signInWithRedirect(pr);
+    welcomeMsg(fbErrT(e));
+  });
+}
+function fbLogout(){if(window.firebase&&firebase.auth)firebase.auth().signOut();try{localStorage.removeItem('planner-gtok')}catch(e){}GTOK={t:'',exp:0}}
+function welcome(show){
+  var e=document.getElementById('wlc');
+  if(!show){if(e)e.remove();return}
+  if(e)return;
+  e=document.createElement('div');e.id='wlc';e.setAttribute('role','dialog');e.setAttribute('aria-modal','true');e.setAttribute('aria-label','Вход');
+  e.innerHTML='<div class="wlcb">'+document.querySelector('.brand .logo').outerHTML+'<h2>ADN Planner</h2><p>Войдите, чтобы задачи, цели и заметки были одинаковыми на телефоне, планшете и компьютере.</p>'+
+  '<button type="button" class="btn wgo" data-acc="login"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Войти через Google</span></button>'+
+  '<p class="lbl" id="wlcm" role="status"></p><button type="button" class="ghost wskip" data-acc="skip">Продолжить без входа</button></div>';
+  document.body.appendChild(e);runTr();
+}
+function welcomeMsg(t){var m=document.getElementById('wlcm');if(m)m.textContent=t||'';var a=document.getElementById('accm');if(a)a.textContent=t||''}
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-acc]');if(!b)return;var a=b.dataset.acc;
+  if(a==='login')fbLogin();
+  else if(a==='logout'){fbLogout()}
+  else if(a==='skip'){try{localStorage.setItem('planner-skiplogin','1')}catch(x){}welcome(false)}
+  else if(a==='install'&&INST){INST.prompt();INST.userChoice.then(function(){INST=null;if(tab==='set')drawSettings()})}
+  else if(a==='export')dataExport();
+  else if(a==='import')document.getElementById('impf').click();
+  else if(a==='impgo')dataImportGo();
+});
+function acctCard(){
+  if(!WEB)return '';
+  var h='<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Аккаунт</h2>';
+  if(!FB_CFG)h+='<p class="lbl" style="margin:0">Вход и облако для этой версии пока не настроены.</p>';
+  else if(ACC.user)h+='<p style="margin:0 0 8px">'+esc(ACC.user.email||ACC.user.displayName||'')+'</p><p class="lbl" style="margin:0 0 8px">Данные синхронизируются между устройствами, где вы вошли.</p><button type="button" class="btn alt sm" data-acc="logout">Выйти</button>';
+  else h+='<p class="lbl" style="margin:0 0 8px">Войдите, чтобы данные были на всех устройствах.</p><button type="button" class="btn sm" data-acc="login">Войти через Google</button>';
+  return h+'<p class="lbl" id="accm" role="status" style="margin:6px 0 0"></p></div>';
+}
+/* ----- установка как приложения ----- */
+var INST=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();INST=e;if(tab==='set'){drawSettings();runTr()}});
+function isStandalone(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}
+function installCard(){
+  if(!WEB||isStandalone())return '';
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+  return '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Установить приложение</h2>'+
+    (INST?'<button type="button" class="btn sm" data-acc="install">Установить ADN Planner</button>':
+    '<p class="lbl" style="margin:0">'+(ios?'В Safari нажмите «Поделиться», затем «На экран Домой».':'В меню браузера выберите «Установить приложение» или «Добавить на главный экран».')+'</p>')+'</div>';
+}
+if(WEB&&'serviceWorker' in navigator&&location.protocol==='https:'){
+  var ml=document.createElement('link');ml.rel='manifest';ml.href='manifest.webmanifest';document.head.appendChild(ml);
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}
+/* ----- перенос данных: выгрузить в файл и загрузить из файла ----- */
+function dataExport(){
+  var o={},k;for(k in S)if(k!=='sync')o[k]=S[k];
+  var str=JSON.stringify({app:'ADN Planner',v:1,ts:Date.now(),data:o}),fn='adn-planner-'+ymd(new Date())+'.json';
+  var done=function(t){var m=document.getElementById('movm');if(m)m.textContent=t};
+  if(window.claude&&claude.use){
+    claude.use('downloads').then(function(dl){
+      if(!dl){done('Выгрузка недоступна в этом окне');return}
+      return dl.save({filename:fn,data:new Blob([str],{type:'application/json'})}).then(function(){done('Файл сохранён')},function(e){done(e&&e.code==='declined'?'':'Не удалось сохранить файл')});
+    });
+    return;
+  }
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([str],{type:'application/json'}));a.download=fn;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},2000);done('Файл сохранён');
+}
+var IMP=null;
+function dataImportFile(f){
+  var m=document.getElementById('movm');IMP=null;
+  if(!f)return;var r=new FileReader();
+  r.onload=function(){
+    try{var j=JSON.parse(r.result),d=j&&j.data;if(!d||!Array.isArray(d.tasks))throw 0;IMP=d;
+      m.innerHTML='';var p=document.createElement('span');
+      p.textContent='В файле: задач '+d.tasks.length+', шариков '+((d.bag||[]).length)+', целей '+((d.goals||[]).length)+', дней с заметками '+Object.keys(d.notes||{}).length+'. ';
+      m.appendChild(p);var b=document.createElement('button');b.type='button';b.className='btn sm';b.dataset.acc='impgo';b.textContent='Заменить данные этим файлом';m.appendChild(b);runTr();
+    }catch(e){m.textContent='Это не файл выгрузки ADN Planner'}
+  };
+  r.readAsText(f);
+}
+function dataImportGo(){
+  if(!IMP)return;snapTake(true);
+  var keep={sync:S.sync,theme:S.theme,lang:S.lang};
+  Object.keys(S).forEach(function(k){delete S[k]});Object.keys(IMP).forEach(function(k){S[k]=IMP[k]});
+  Object.keys(keep).forEach(function(k){if(keep[k]!==undefined)S[k]=keep[k]});
+  S.colors=S.colors||{};S.zones=S.zones||[];S.notes=S.notes||{};S.bag=S.bag||[];S.goals=S.goals||[];S.done=S.done||{};
+  if(!S.spheres)S.spheres=SP.map(function(x){return {id:x.id,n:x.n,c:S.colors[x.id]||x.c}});
+  IMP=null;if(NB){NB.destroy();NB=null}save();tab='day';render();runTr();vToast('Данные загружены',3000);
+}
+document.addEventListener('change',function(e){if(e.target.id==='impf'){dataImportFile(e.target.files[0]);e.target.value=''}});
+function moveCard(){
+  return '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Перенос данных</h2><p class="lbl" style="margin:0 0 8px">Сохраните все задачи, цели, мешок и заметки в файл и загрузите его в другой версии приложения. Перед загрузкой делается резервная копия.</p>'+
+  '<div class="row"><button type="button" class="btn alt sm" data-acc="export">Выгрузить данные</button><button type="button" class="btn alt sm" data-acc="import">Загрузить данные</button><input type="file" id="impf" accept=".json,application/json" hidden></div><div class="lbl" id="movm" role="status" style="margin-top:8px"></div></div>';
+}
+/* ----- Google Календарь напрямую (версия-сайт) ----- */
+var GTOK={t:'',exp:0},GTC=null,GTW=null;
+try{var gtk=JSON.parse(localStorage.getItem('planner-gtok')||'{}');if(gtk.exp>Date.now())GTOK=gtk}catch(e){}
+function gTokOk(){return !!GTOK.t&&GTOK.exp>Date.now()}
+function gisPreload(){
+  if(!WEB||!GC_CLIENT||GTC)return;
+  loadJs('https://accounts.google.com/gsi/client').then(function(){
+    GTC=google.accounts.oauth2.initTokenClient({client_id:GC_CLIENT,scope:'https://www.googleapis.com/auth/calendar',
+      callback:function(r){var w=GTW;GTW=null;if(!w)return;if(r&&r.access_token){GTOK={t:r.access_token,exp:Date.now()+((+r.expires_in||3600)-120)*1000};try{localStorage.setItem('planner-gtok',JSON.stringify(GTOK))}catch(e){}w.res(GTOK.t)}else w.rej({code:'needs_reauth'})},
+      error_callback:function(){var w=GTW;GTW=null;if(w)w.rej({code:'needs_reauth'})}});
+  }).catch(function(){});
+}
+/* вызывать прямо из нажатия: Google показывает окно разрешения только по действию пользователя */
+function gTokenReq(){
+  return new Promise(function(res,rej){
+    if(!GTC){rej({code:'server_not_connected'});return}
+    GTW={res:res,rej:rej};
+    try{GTC.requestAccessToken({prompt:'',login_hint:ACC.user&&ACC.user.email||undefined})}catch(e){GTW=null;rej({code:'needs_reauth'})}
+  });
+}
+document.addEventListener('click',function(e){
+  if(!WEB)return;var b=e.target.closest&&e.target.closest('[data-gc=sync],[data-gc=cals]');if(!b||gTokOk())return;
+  e.stopPropagation();var a=b.dataset.gc;
+  gTokenReq().then(function(){if(a==='sync')gcSync({manual:1});else gcCals()},function(er){GC.err=gcErrT(er);gcUI();if(tab==='set'){drawSettings();runTr()}});
+},true);
+async function gcRest(tool,inp){
+  if(!gTokOk())throw {code:GC_CLIENT?'needs_reauth':'server_not_connected'};
+  inp=inp||{};
+  var B='https://www.googleapis.com/calendar/v3/',en=encodeURIComponent,cal=en(inp.calendarId||'primary'),tz=Intl.DateTimeFormat().resolvedOptions().timeZone,
+  iso=function(x){return new Date(x).toISOString()},url,method='GET',body=null;
+  if(tool==='list_calendars')url=B+'users/me/calendarList?maxResults=250';
+  else if(tool==='list_events')url=B+'calendars/'+cal+'/events?singleEvents=true&maxResults='+(inp.pageSize||250)+'&timeMin='+en(iso(inp.startTime))+'&timeMax='+en(iso(inp.endTime))+(inp.pageToken?'&pageToken='+en(inp.pageToken):'');
+  else if(tool==='create_event'||tool==='update_event'){
+    body={summary:inp.summary,start:{dateTime:inp.startTime,timeZone:tz},end:{dateTime:inp.endTime,timeZone:tz}};
+    if(inp.description)body.description=inp.description;if(inp.recurrenceData)body.recurrence=inp.recurrenceData;
+    if(tool==='create_event'){method='POST';url=B+'calendars/'+cal+'/events'}else{method='PATCH';url=B+'calendars/'+cal+'/events/'+en(inp.eventId)}
+  }
+  else if(tool==='delete_event'){method='DELETE';url=B+'calendars/'+cal+'/events/'+en(inp.eventId)+'?sendUpdates=none'}
+  else throw {code:'tool_error',message:'unknown tool'};
+  var r;
+  try{r=await fetch(url,{method:method,headers:{Authorization:'Bearer '+GTOK.t,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined})}
+  catch(e){throw {code:'server_unavailable'}}
+  if(r.status===401){GTOK={t:'',exp:0};try{localStorage.removeItem('planner-gtok')}catch(e){}throw {code:'needs_reauth'}}
+  if(!r.ok){var tx='';try{tx=await r.text()}catch(e){}throw {code:'tool_error',message:r.status+' '+tx.slice(0,200)}}
+  if(method==='DELETE'||r.status===204)return {};
+  var j=await r.json();
+  if(tool==='list_calendars')return {calendars:(j.items||[]).map(function(c){return {id:c.id,summary:c.summaryOverride||c.summary}})};
+  if(tool==='list_events')return {events:j.items||[],nextPageToken:j.nextPageToken,summary:j.summary};
+  return j;
+}
 (function(){function D(r,e,p,u){if(!DICT[r])DICT[r]=[e,p,u]}
 D('Защита данных: на этом устройстве стало намного меньше задач, чем в облаке. Отправка в облако остановлена, чтобы не потерять данные. Копия сохранена.','Data protection: this device now has far fewer tasks than the cloud. Upload was stopped to avoid data loss. A backup was saved.','Ochrona danych: na tym urządzeniu jest znacznie mniej zadań niż w chmurze. Wysyłanie wstrzymano, aby nie utracić danych. Kopia zapisana.','Захист даних: на цьому пристрої стало набагато менше завдань, ніж у хмарі. Надсилання зупинено, щоб не втратити дані. Копію збережено.');
 D('Восстановить из облака','Restore from cloud','Przywróć z chmury','Відновити з хмари');
@@ -2363,7 +2586,10 @@ function gg(){var g=S.gcal=S.gcal||{};g.map=g.map||{};g.cals=g.cals||['primary']
 var GC={mcp:null,busy:false,again:false,ev:[],rng:null,err:'',last:0,tm:0,sig:'',tried:'',prog:''};
 try{var _gc=JSON.parse(localStorage.getItem('planner-gcev')||'null');if(_gc){GC.ev=_gc.ev||[];GC.rng=_gc.rng||null;GC.last=_gc.last||0}}catch(e){}
 function gcErrT(e){
-  var c=e&&e.code,m={
+  var c=e&&e.code;
+  if(WEB&&c==='needs_reauth')return 'Нажмите «Синхронизировать», чтобы подключить Google Календарь';
+  if(WEB&&c==='server_not_connected')return 'Google Календарь для этой версии пока не настроен';
+  var m={
     needs_reauth:'Нужно заново подключить Google Календарь: claude.ai → Настройки → Коннекторы',
     server_not_connected:'Google Календарь не подключён: добавьте его в claude.ai → Настройки → Коннекторы',
     approval_required:'Нужно ваше разрешение: нажмите «Синхронизировать» и разрешите доступ',
@@ -2379,6 +2605,7 @@ function gcErrT(e){
   return m[c]||('Не удалось синхронизировать с Google'+(e?' ['+String(e.code||e.name||'')+': '+String(e.message||'').slice(0,90)+']':''));
 }
 async function gcCall(tool,input){
+  if(WEB)return gcRest(tool,input);
   if(!GC.mcp){
     if(!window.claude||!claude.use)throw {code:'capability_disabled'};
     var m=await claude.use('mcp');if(!m)throw {code:'capability_disabled'};GC.mcp=m;

@@ -4,9 +4,15 @@
 
 Идея на будущее: встроенный ИИ-агент, который подсказывает по эффективности и дисциплине, настоящие аккаунты и вход, интеграции (Worksection, Garmin).
 
+## Две версии из одного файла
+- **claude.ai Artifact** (`window.claude` есть): облако через `claude.use('db'/'user')`, календарь через `mcp`, выгрузка файла через `downloads`.
+- **Сайт / приложение (PWA)** на GitHub Pages: https://adintsove.github.io/planner/ (`WEB=true`). Вход через Google (Firebase Auth, compat SDK с gstatic, `FBV`), облако — Firestore с теми же путями `data/users/<uid>/sync/{p,c}` (код `synStart(db,id)` общий), календарь — Google Calendar REST (`gcRest`, токен через Google Identity Services, `GC_CLIENT`, токен ~1 ч, при истечении нужно нажать «Синхронизировать»). Настройки `FB_CFG` и `GC_CLIENT` в начале скрипта (не секрет; доступ защищают правила Firestore: `match /data/users/{uid}/{rest=**}` только для `request.auth.uid == uid`).
+- Установка: `manifest.webmanifest`, `sw.js` (страница — сеть, затем кэш; firebase/шрифты — кэш), значки в `icons/`. Экран входа `#wlc` (можно «Продолжить без входа», `planner-skiplogin`), карточки «Аккаунт», «Установить приложение», «Перенос данных» (выгрузка/загрузка JSON, перед загрузкой `snapTake(true)`).
+
 ## Как сейчас публикуется
 - Приложение публикуется как приватный Artifact на claude.ai (ссылка: https://claude.ai/artifact/NZ6unpRNK9eqYYFyk6d8mR), версия на момент переноса: 66, после защиты синхронизации: 67.
-- Возможности Artifact: `db` и `user` (облачная синхронизация между устройствами) и `mcp` (Google Calendar: list_calendars, list_events, create_event, update_event, delete_event).
+- Возможности Artifact: `db` и `user` (облачная синхронизация между устройствами), `mcp` (Google Calendar: list_calendars, list_events, create_event, update_event, delete_event) и `downloads` (выгрузка данных в файл).
+- Сайт обновляется сам: GitHub Pages публикует ветку `main`.
 - Источник правды теперь этот репозиторий (`index.html`). После правок файл публикуется в тот же Artifact.
 - Тесты: Playwright (Chromium) с подменой `window.claude` (`claude.use('db'|'user'|'mcp')`) и `SpeechRecognition`; перед публикацией скрипт вынимается из `<script>` и проверяется `node --check`.
 
