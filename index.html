@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Planner A1</title>
+<title>ADN Planner</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap">
 <style>
 :root{--bg:#EDF1F5;--surface:#fff;--ink:#16233B;--muted:#5D6B82;--line:#D5DCE6;--btn:#16233B;--btnink:#fff;
@@ -296,7 +296,7 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 </head>
 <body>
 <main>
-<div class="top"><h1>Planner A1</h1><button class="ghost gear" data-act="tab" data-tab="set" aria-label="Настройки" aria-pressed="false">⚙︎</button></div>
+<div class="top"><h1>ADN Planner</h1><button class="ghost gear" data-act="tab" data-tab="set" aria-label="Настройки" aria-pressed="false">⚙︎</button></div>
 <div class="tabs" role="tablist">
   <button role="tab" data-act="tab" data-tab="day">Ежедневник</button>
   <button role="tab" data-act="tab" data-tab="bag">Мешок задач</button>
@@ -2395,7 +2395,7 @@ function gcParse(e,cal){
   if(!e||!e.id||e.status==='cancelled')return null;
   var st=e.start||{},en=e.end||{},ad=!!st.date&&!st.dateTime,sd=(st.dateTime||st.date||'').slice(0,10),ed=(en.dateTime||en.date||'').slice(0,10);
   if(!/^\d{4}-\d\d-\d\d$/.test(sd))return null;
-  var o={id:e.id,cal:cal,rid:e.recurringEventId||'',t:e.summary||'(без названия)',ad:ad,d:sd,upd:e.updated||'',app:/Розвиватор|Planner A1/.test(e.description||'')};
+  var o={id:e.id,cal:cal,rid:e.recurringEventId||'',t:e.summary||'(без названия)',ad:ad,d:sd,upd:e.updated||'',app:/Розвиватор|Planner A1|ADN Planner/.test(e.description||'')};
   if(ad){o.d2=ed>sd?addD(ed,-1):sd;o.s=0;o.em=1440;return o}
   o.s=mins(st.dateTime.slice(11,16));o.d2=ed||sd;
   var em=en.dateTime?mins(en.dateTime.slice(11,16)):o.s+30;
@@ -2434,7 +2434,7 @@ function gcRule(t){
   return r;
 }
 function gcBody(t,cal){
-  var d=gcStart(t),s=mins(t.start),b={summary:t.title,startTime:gcDT(d,s),endTime:gcDT(d,s+t.dur),description:'Создано в приложении «Planner A1»'};
+  var d=gcStart(t),s=mins(t.start),b={summary:t.title,startTime:gcDT(d,s),endTime:gcDT(d,s+t.dur),description:'Создано в приложении «ADN Planner»'};
   if(cal&&cal!=='primary')b.calendarId=cal;
   if(t.repeat)b.recurrenceData=[gcRule(t)];
   return b;
