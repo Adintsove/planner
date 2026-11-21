@@ -1867,7 +1867,7 @@ function sPieces(){
 }
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
-  e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Синхронизация недоступна: данные только на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
+  e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
   e.dataset.st=st;
 }
 function sApply(key,json){
@@ -1969,11 +1969,13 @@ async function sPush(){
       setSyn('sync');await sWrite(k,pc[k],h);any=true;
     }
     if(any)try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-    setSyn('ok');SYN.err='';
-  }catch(e){SYN.err=(e&&e.code)||'err';setSyn('err')}
+    setSyn('ok');SYN.err='';SYN.fail=0;
+  }catch(e){SYN.err=(e&&e.code)||'err';SYN.fail=(SYN.fail||0)+1;setSyn('err')}
   finally{SYN.busy=false}
 }
-function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){var pc=sPieces();if(sPending().length&&!SYN.err)schedPush(2500)})},ms===undefined?2500:ms)}
+/* повторы с нарастающей паузой: 4, 10, 20, 40, 80, 120 секунд */
+function backoff(n){return Math.min(120000,[4000,10000,20000,40000,80000][Math.min(n,5)-1]||120000)}
+function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){if(SYN.err)schedPush(backoff(SYN.fail||1));else if(sPending().length)schedPush(2500)})},ms===undefined?2500:ms)}
 var _sv0=save;save=function(){_sv0();schedPush()};
 document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.on){clearTimeout(SYN.tm);sPush()}});
 (async function(){
@@ -1982,7 +1984,25 @@ document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.
     var db=await claude.use('db'),us=await claude.use('user');if(!db||!us)return;
     var id=await us.id();if(!id)return;
     var base=db.doc('data/users/'+id+'/sync');SYN.P=base.collection('p');SYN.C=base.collection('c');SYN.on=true;setSyn('sync');
-    SYN.P.onSnapshot(function(snap){SYN.q=SYN.q.then(function(){return sProc(snap)}).catch(function(){setSyn('err')})},function(){SYN.on=false;setSyn('err')});
+    SYN.sub=function(){
+      clearTimeout(SYN.st);try{if(typeof SYN.un==='function')SYN.un()}catch(x){}SYN.un=null;
+      var lost=function(){
+        SYN.sf=(SYN.sf||0)+1;setSyn('err');
+        clearTimeout(SYN.st);SYN.st=setTimeout(SYN.sub,backoff(SYN.sf));
+      };
+      try{
+        SYN.un=SYN.P.onSnapshot(function(snap){
+          SYN.sf=0;SYN.snapAt=Date.now();
+          SYN.q=SYN.q.then(function(){return sProc(snap)}).catch(lost);
+        },lost);
+      }catch(x){lost()}
+    };
+    SYN.sub();
+    /* вернулись в приложение или появилась сеть: переподключиться и отправить накопленное */
+    function wake(){if(!SYN.on)return;if(SYN.err||SYN.sf||Date.now()-(SYN.snapAt||0)>600000)SYN.sub();SYN.fail=0;schedPush(500)}
+    window.addEventListener('online',wake);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)wake()});
+    window.addEventListener('pageshow',wake);
   }catch(e){setSyn('off')}
 })();
 (function(){function D(r,e,p,u){if(!DICT[r])DICT[r]=[e,p,u]}
@@ -1994,7 +2014,7 @@ D('Облачная копия','Cloud backup','Kopia w chmurze','Хмарна �
 D('Копии нет','No backup','Brak kopii','Копії немає');
 D('Синхронизация…','Syncing…','Synchronizacja…','Синхронізація…');
 D('☁ Синхронизировано','☁ Synced','☁ Zsynchronizowano','☁ Синхронізовано');
-D('Синхронизация недоступна: данные только на этом устройстве','Sync unavailable: data stays on this device only','Synchronizacja niedostępna: dane tylko na tym urządzeniu','Синхронізація недоступна: дані лише на цьому пристрої');
+D('Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве','No connection to the cloud, retrying. Data is saved on this device','Brak połączenia z chmurą, ponawiam. Dane zapisane na tym urządzeniu','Немає зв’язку з хмарою, повторюю спробу. Дані збережено на цьому пристрої');
 D('Без синхронизации: данные только на этом устройстве','No sync: data stays on this device only','Bez synchronizacji: dane tylko na tym urządzeniu','Без синхронізації: дані лише на цьому пристрої');
 })();
 
