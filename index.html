@@ -1873,10 +1873,21 @@ function setSyn(st){
 function sApply(key,json){
   var v=JSON.parse(json);
   if(key==='main'){
-    var keep={notes:S.notes,sync:S.sync,theme:S.theme,lang:S.lang};
+    var keep={notes:S.notes,sync:S.sync,theme:S.theme,lang:S.lang},lg=S.gcal;
     Object.keys(S).forEach(function(k){delete S[k]});
     Object.keys(v).forEach(function(k){S[k]=v[k]});
     Object.keys(keep).forEach(function(k){if(keep[k]!==undefined)S[k]=keep[k]});
+    /* связки задач с событиями Google не теряем: объединяем локальные и облачные */
+    if(lg&&S.gcal){
+      ['map','bmap'].forEach(function(f){
+        var a=lg[f]||{},b=S.gcal[f]=S.gcal[f]||{};
+        Object.keys(a).forEach(function(k){
+          if(b[k])return;
+          var ok=f==='map'?(S.tasks||[]).some(function(t){return t.id===k}):(S.bag||[]).some(function(x){return x.id===a[k].id});
+          if(ok)b[k]=a[k];
+        });
+      });
+    }
     S.colors=S.colors||{};S.zones=S.zones||[];S.notes=S.notes||{};if(!S.spheres)S.spheres=SP.map(function(x){return {id:x.id,n:x.n,c:S.colors[x.id]||x.c}});
   }else{S.notes[key.slice(2)]=v}
 }
@@ -1908,7 +1919,7 @@ async function sProc(snap){
       S.sync.cnt=ni;
     }
     if(lc)sBackup(key,pc[key]);
-    sApply(key,json);S.sync.h[key]=m.h;S.sync.mt[key]=m.ts;delete SYN.dirty[key];applied=true;
+    sApply(key,json);S.sync.h[key]=m.h;S.sync.mt[key]=m.ts;delete SYN.dirty[key];applied=true;SYN.lastApply=Date.now();
     pc=sPieces();
   }
   SYN.ready=true;
@@ -2206,9 +2217,36 @@ async function gcFind(t,cal){
   }catch(e){return ''}
 }
 function gcSig(){var g=gg();return hsh(S.tasks.map(function(t){return t.id+taskH(t)}).join(',')+'|'+Object.keys(g.map).join(','))}
+var GCDEV=Math.random().toString(36).slice(2,10);
+async function gcLock(){
+  if(!SYN.on||!SYN.C)return true;
+  try{
+    var d=SYN.C.doc('gclock'),x=await d.get(),v=x.exists?x.data():null;
+    if(v&&v.id!==GCDEV&&Date.now()-v.ts<90000)return false;
+    await d.set({id:GCDEV,ts:Date.now()});
+    await new Promise(function(r){setTimeout(r,1500)});
+    x=await d.get();v=x.exists?x.data():null;
+    return !!v&&v.id===GCDEV;
+  }catch(e){return true}
+}
+async function gcUnlock(){if(!SYN.on||!SYN.C)return;try{await SYN.C.doc('gclock').set({id:GCDEV,ts:0})}catch(e){}}
+async function gcFindApp(t,cal,mine){
+  try{
+    var d=gcStart(t),inp={startTime:d+'T00:00:00',endTime:addD(d,1)+'T00:00:00',pageSize:50};
+    if(cal&&cal!=='primary')inp.calendarId=cal;
+    var p=await gcCall('list_events',inp),r='';
+    ((p&&p.events)||[]).forEach(function(e){var o=gcParse(e,cal);if(o&&!r&&o.app&&!o.rid&&!mine[o.id]&&o.t===t.title&&o.s===mins(t.start))r=o.id});
+    return r;
+  }catch(e){return ''}
+}
 async function gcSync(opt){
   var g=gg();if(!g.on)return;
   if(!(opt&&opt.manual)&&Date.now()<(GC.pause||0))return;
+  if(GC.busy){GC.again=true;return}
+  /* не работать с Google, пока не получены облачные данные: иначе каждое устройство создаст события заново */
+  if(SYN.on&&(!SYN.ready||Date.now()-(SYN.lastApply||0)<4000)&&(GC.wait||0)<15){GC.wait=(GC.wait||0)+1;clearTimeout(GC.wt);GC.wt=setTimeout(function(){gcSync(opt)},2000);return}
+  GC.wait=0;
+  if(SYN.on&&!(await gcLock())){clearTimeout(GC.wt);GC.wt=setTimeout(function(){gcSync(opt)},25000);return}
   if(GC.busy){GC.again=true;return}
   snapTake();
   GC.busy=true;GC.err='';GC.prog='';gcUI();
@@ -2325,7 +2363,9 @@ async function gcSync(opt){
             catch(e){if(!e||e.code!=='tool_error')throw e}
             delete g.map[t.id];
           }
-          var cal=(m&&m.cal)||tgt,p=await gcCall('create_event',gcBody(t,cal)),id=gcId(p);
+          var cal=(m&&m.cal)||tgt,id='',p;
+          if(!t.repeat){id=await gcFindApp(t,cal,mine);if(id)mine[id]=1}
+          if(!id){p=await gcCall('create_event',gcBody(t,cal));id=gcId(p)}
           if(!id)id=await gcFind(t,cal);
           if(id){g.map[t.id]={eid:id,cal:cal,th:taskH(t),eh:pushH(t),ts:Date.now(),rec:!!t.repeat};mine[id]=1;changed=true}
           else fail++;
@@ -2347,6 +2387,7 @@ async function gcSync(opt){
     GC.err=gcErrT(e);
   }
   GC.busy=false;GC.prog='';
+  gcUnlock();
   gcUI();
   if(tab==='day'||tab==='set'||tab==='bag')softRender();
   if(GC.again){GC.again=false;setTimeout(gcSync,300)}
