@@ -17,7 +17,7 @@
 Состояние `S` хранится в localStorage (`planner-v1`) через `save()`:
 `spheres, goals, tasks, done['id|YYYY-MM-DD'], zones, bag, notes[day], wake, bed, life, theme, lang, sync, gcal`.
 - `tasks`: `{id,title,sphere,start,dur,date,repeat,days,until,goal,fromBag,gsrc}`.
-- `bag` (шарики): `{id,title,sphere,imp,tid,goal,focus,due,cr,gsrc}`. `due` и `cr` задают кольцо-таймер (от момента создания/начала до конца дня срока).
+- `bag` (шарики): `{id,title,sphere,imp,tid,goal,focus,due,cr,gsrc}`. `due` и `cr` задают кольцо-таймер (от момента создания/начала до конца дня срока). `focus` — шарик в шаре «Супер-фокус» (до 5 штук, `FOCUS`; радиус шара `FR=W*0.23`, шарики внутри не больше `FR/2.75`).
 - `notes[day]`: `{h (html), d (png dataURL рисунка), lh (логическая высота поля), im (картинки), sk (стикеры)}`.
 - `sk` (стикеры): `{x,y,w,h,c (цвет), fs (размер текста, логический, по умолчанию 22; шаги `SKF`), t (html текста), d (png рисунка на стикере), cw,ch (размер холста стикера)}`; координаты логические (ширина поля 800).
 

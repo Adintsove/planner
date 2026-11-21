@@ -722,14 +722,14 @@ document.addEventListener('touchend',function(e){
   if(Math.abs(dx)>70&&Math.abs(dy)<50)step(dx<0?1:-1);
 },{passive:true});
 S.bag=S.bag||[];
-var GX=0,GY=0,GR=0,FX=0,FY=0,FR=0,FOCUS=3,bodies=[],raf=0,still=0,W=0,H=0,oldW=0,cvs=null,ctx=null,dg=null,pend=null,beid=null;
+var GX=0,GY=0,GR=0,FX=0,FY=0,FR=0,FOCUS=5,bodies=[],raf=0,still=0,W=0,H=0,oldW=0,cvs=null,ctx=null,dg=null,pend=null,beid=null;
 function bStat(b){if(!b.tid||!find(b.tid))return 'free';var k=b.tid+'|';return Object.keys(S.done).some(function(x){return x.indexOf(k)===0})?'done':'sched'}
 function bagActive(){return S.bag.filter(function(b){return bStat(b)!=='done'})}
 function bfind(id){return S.bag.filter(function(b){return b.id===id})[0]}
 var KS=1.2;
 function bagK(){var sum=0;bagActive().forEach(function(b){var r=W*(0.03+b.imp*0.009);sum+=r*r});if(!sum)return 1.3;return Math.max(0.88,Math.min(1.35,Math.sqrt(0.5*GR*GR/sum)))}
 function rad(i){return W*(0.03+i*0.009)*KS}
-function geo(){GX=W/2;GY=W/2;GR=W/2-4;FR=W*0.19;FX=GX;FY=GY-GR+FR+W*0.05}
+function geo(){GX=W/2;GY=W/2;GR=W/2-4;FR=W*0.23;FX=GX;FY=GY-GR+FR+W*0.05}
 function spawnPos(o,pre){
   var r=o.r,k,a,rr,x,y;
   if(o.f){
@@ -757,8 +757,10 @@ function syncBodies(pre){
   var ids={};KS=bagK();
   bagActive().forEach(function(b){
     ids[b.id]=1;var o=bodies.filter(function(x){return x.id===b.id})[0],r=rad(b.imp);
-    if(!o){o={id:b.id,f:!!b.focus,r:r,x:GX,y:GY,vx:0,vy:pre?0:3};spawnPos(o,pre);bodies.push(o)}
-    var nf=!!b.focus;o.r=r;if(o.f!==nf){o.f=nf;spawnPos(o,false);o.vx=0;o.vy=0}
+    if(!o){o={id:b.id,f:!!b.focus,r:b.focus?Math.min(r,FR/2.75):r,x:GX,y:GY,vx:0,vy:pre?0:3};spawnPos(o,pre);bodies.push(o)}
+    var nf=!!b.focus;if(o.f!==nf){o.f=nf;o.r=nf?Math.min(r,FR/2.75):r;spawnPos(o,false);o.vx=0;o.vy=0}
+    /* в «Супер-фокусе» шарики чуть меньше, чтобы 5 штук помещались */
+    o.r=o.f?Math.min(r,FR/2.75):r;
     o.c=sp(b.sphere).c;o.a=bStat(b)==='sched'?.35:1;o.t=b.title;o.due=b.due||'';o.cr=b.cr||0;
   });
   bodies=bodies.filter(function(o){return ids[o.id]});
@@ -899,7 +901,7 @@ function drawBag(){
     '<button class="btn" id="bsub" type="submit" style="flex:1">Бросить в мешок</button></div></form>'+
     '<div class="jar" id="jar"><canvas id="bc" aria-label="Мешок с задачами"></canvas></div>'+
     '<p class="prog" id="bcnt" style="text-align:center;margin:8px 0 0"></p>'+
-    '<p class="lbl" style="text-align:center;margin:0 0 6px">Перетащите шарик на день, чтобы запланировать задачу. Нажмите на шарик, чтобы изменить его.</p><p class="lbl" style="text-align:center;margin:0 0 6px">Перетащите шарик в малый шар «Супер-фокус» вверху, чтобы выделить самое важное (до 3 штук).</p><p class="lbl" id="bmsg" style="text-align:center;color:#D64545;margin:0"></p>'+
+    '<p class="lbl" style="text-align:center;margin:0 0 6px">Перетащите шарик на день, чтобы запланировать задачу. Нажмите на шарик, чтобы изменить его.</p><p class="lbl" style="text-align:center;margin:0 0 6px">Перетащите шарик в малый шар «Супер-фокус» вверху, чтобы выделить самое важное (до 5 штук).</p><p class="lbl" id="bmsg" style="text-align:center;color:#D64545;margin:0"></p>'+
     '<div class="days">'+dh+'</div><details class="card" id="barc" style="margin-top:12px"></details>';
   cvs=document.getElementById('bc');W=document.getElementById('jar').clientWidth;H=W;geo();
   var dpr=window.devicePixelRatio||1;cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';ctx=cvs.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -942,7 +944,7 @@ function saveBall(){
   var b=bfind(beid);if(!b)return;
   b.title=document.getElementById('bet').value.trim()||b.title;b.sphere=document.getElementById('bes').value;b.imp=+document.getElementById('bei').value;
   var wf=document.getElementById('bef2').checked;
-  if(wf&&!b.focus&&bagActive().filter(function(x){return x.focus}).length>=FOCUS){document.getElementById('bemsg').textContent='Шар «Супер-фокус» полон (3 из 3)';return}
+  if(wf&&!b.focus&&bagActive().filter(function(x){return x.focus}).length>=FOCUS){document.getElementById('bemsg').textContent='Шар «Супер-фокус» полон (5 из 5)';return}
   b.focus=wf;
   var du=document.getElementById('bedue').value||'';
   if(du!==(b.due||'')){if(du){b.due=du;b.cr=Date.now()}else{delete b.due;delete b.cr}}
@@ -982,7 +984,7 @@ document.addEventListener('pointerup',function(e){
   var px=e.clientX-r.left,py=e.clientY-r.top,inBig=Math.hypot(px-GX,py-GY)<=GR,bb=bfind(o.id),want=inBig?Math.hypot(px-FX,py-FY)<=FR:o.f;
   document.getElementById('bmsg').textContent='';
   if(bb&&want!==o.f){
-    if(want&&bagActive().filter(function(x){return x.focus}).length>=FOCUS){document.getElementById('bmsg').textContent='Шар «Супер-фокус» полон (3 из 3)';want=o.f}
+    if(want&&bagActive().filter(function(x){return x.focus}).length>=FOCUS){document.getElementById('bmsg').textContent='Шар «Супер-фокус» полон (5 из 5)';want=o.f}
     else{bb.focus=want;save();o.f=want}
   }
   o.x=px;o.y=py;confine(o);
@@ -1079,8 +1081,8 @@ var DICT={};
 ["Продолжительность сна","Sleep duration","Długość snu","Тривалість сну"],
 ["Ползунок двигает время отбоя, подъём остаётся прежним.","The slider moves the bedtime; the wake-up time stays the same.","Suwak przesuwa porę snu, godzina pobudki pozostaje bez zmian.","Повзунок рухає час відбою, підйом залишається незмінним."],
 ["Супер-фокус","Super focus","Super fokus","Супер-фокус"],
-["Шар «Супер-фокус» полон (3 из 3)","The “Super focus” sphere is full (3 of 3)","Kula „Super fokus” jest pełna (3 z 3)","Куля «Супер-фокус» повна (3 з 3)"],
-["Перетащите шарик в малый шар «Супер-фокус» вверху, чтобы выделить самое важное (до 3 штук).","Drag a ball into the small “Super focus” sphere at the top to highlight what matters most (up to 3).","Przeciągnij kulkę do małej kuli „Super fokus” u góry, aby wyróżnić to, co najważniejsze (do 3).","Перетягніть кульку в малу кулю «Супер-фокус» угорі, щоб виділити найважливіше (до 3)."],
+["Шар «Супер-фокус» полон (5 из 5)","The “Super focus” sphere is full (5 of 5)","Kula „Super fokus” jest pełna (5 z 5)","Куля «Супер-фокус» повна (5 з 5)"],
+["Перетащите шарик в малый шар «Супер-фокус» вверху, чтобы выделить самое важное (до 5 штук).","Drag a ball into the small “Super focus” sphere at the top to highlight what matters most (up to 5).","Przeciągnij kulkę do małej kuli „Super fokus” u góry, aby wyróżnić to, co najważniejsze (do 5).","Перетягніть кульку в малу кулю «Супер-фокус» угорі, щоб виділити найважливіше (до 5)."],
 ["Подзадачи","Subtasks","Podzadania","Підзавдання"],
 ["просрочено","overdue","po terminie","прострочено"],
 ["Повторять до","Repeat until","Powtarzaj do","Повторювати до"],
