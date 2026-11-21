@@ -277,6 +277,18 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 .gad{display:grid;gap:2px;margin:0 0 4px 44px}
 .gad span{display:block;font-size:10.5px;background:var(--line);color:var(--muted);border-radius:5px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip.g{background:var(--line)!important;color:var(--muted)!important}
+.calw{position:relative}
+.ffw{position:sticky;top:calc(18px + env(safe-area-inset-top,0px));height:0;z-index:20}
+.ffab{position:absolute;right:-6px;top:-14px;width:40px;height:40px;border-radius:50%;border:2px solid #F5B301;background:var(--surface);color:#E0A100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);font:700 11px/1 Onest,system-ui,sans-serif}
+.ffab span{font-size:14px;line-height:1}.ffab b{font-size:11px;color:var(--ink)}
+.ffab.empty{opacity:.55;box-shadow:none}
+.ffab[aria-expanded="true"]{background:#F5B301;color:#fff}.ffab[aria-expanded="true"] b{color:#fff}
+.ffpop{position:absolute;right:-6px;top:32px;width:min(300px,calc(100vw - 40px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.ffh{font-weight:700;color:#E0A100;margin:0 0 4px}
+.ffi{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);color:var(--ink);font:500 14px Onest,system-ui,sans-serif;padding:8px 2px;cursor:pointer;min-height:44px}
+.ffi:first-of-type{border-top:0}
+.ffi .dot{margin-top:5px}.ffi .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.ffgo{width:100%;margin-top:6px;font-size:14px}
 .gcb{min-height:36px;min-width:36px;padding:0 8px;margin-right:auto;margin-left:8px;font-size:18px}
 .gcb.spin{animation:gsp 1s linear infinite}.gcb.bad{border-color:#E4572E;color:#E4572E}
 @keyframes gsp{to{transform:rotate(360deg)}}
@@ -416,12 +428,12 @@ function render(){
     '<details class="card"><summary>Новая задача</summary><form id="tf" style="margin-top:8px"><div class="row"><input type="text" id="tt" placeholder="Что нужно сделать" required maxlength="120" aria-label="Название задачи"><select id="ts" aria-label="Сфера">'+opts+'</select></div>'+
     '<div class="row" style="margin-top:8px"><label class="field"><span class="lbl">Начало</span><input type="time" id="tst" value="09:00" required></label><label class="field"><span class="lbl">Длительность, мин</span><input type="number" id="td" value="30" min="5" max="720" step="5" style="width:110px" required></label>'+
     '<label class="row" style="margin-top:16px"><input type="checkbox" id="tr"> Повторять</label><button class="btn" type="submit" style="margin-top:16px;margin-left:auto">Добавить</button><div class="row rdays" id="trd" hidden><label class="dchip"><input type="checkbox" value="0" checked><span>Пн</span></label><label class="dchip"><input type="checkbox" value="1" checked><span>Вт</span></label><label class="dchip"><input type="checkbox" value="2" checked><span>Ср</span></label><label class="dchip"><input type="checkbox" value="3" checked><span>Чт</span></label><label class="dchip"><input type="checkbox" value="4" checked><span>Пт</span></label><label class="dchip"><input type="checkbox" value="5" checked><span>Сб</span></label><label class="dchip"><input type="checkbox" value="6" checked><span>Вс</span></label><div class="field" style="flex-basis:100%"><span class="lbl">Повторять до</span><label class="dpick" title="Выбрать срок"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="dv"></span><input type="date" class="dpk" id="tuntil"></label></div></div></div></form></details>'+
-    '<div class="card" id="cal"></div><div class="card" id="lc"></div>';
+    '<div class="calw"><div class="ffw" id="ffw"></div><div class="card" id="cal"></div></div><div class="card" id="lc"></div>';
     document.getElementById('es').innerHTML=opts;
     drawMain();
   } else if(tab==='set')drawSettings();else if(tab==='bag')drawBag();else if(tab==='res')drawResults();else if(tab==='strat')drawStrat();else drawGoals();
 }
-function drawMain(){drawLife();drawQuote();drawEff();
+function drawMain(){drawLife();drawQuote();drawEff();drawFocus();
   document.getElementById('dl').textContent=label();
   document.querySelectorAll('[data-act=view]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===view)});
   if(view==='month')drawMonth();else drawGrid();
@@ -486,6 +498,23 @@ function drawMonth(){
   }
   document.getElementById('cal').innerHTML='<div class="mg">'+h+'</div>';
 }
+/* плавающий кружок «Супер-фокус» в углу календаря */
+var FF={open:false};
+function drawFocus(){
+  var w=document.getElementById('ffw');if(!w)return;
+  var fl=bagActive().filter(function(b){return b.focus}),t0=ymd(new Date());
+  var item=function(b){
+    var t=b.tid&&find(b.tid),st=bStat(b)==='sched'&&t?'в календаре: '+fd(t.date)+', '+t.start:(b.due?(b.due<t0?'просрочено':'срок до '+fd(b.due)):'в мешке');
+    return '<button type="button" class="ffi" data-act="ffopen" data-id="'+b.id+'"><span class="dot" style="background:'+sp(b.sphere).c+'"></span><span class="t">'+esc(b.title)+'<br><span class="lbl">'+st+'</span></span></button>';
+  };
+  w.innerHTML='<button type="button" class="ffab'+(fl.length?'':' empty')+'" data-act="ffab" aria-expanded="'+FF.open+'" aria-label="Задачи в фокусе" title="Задачи в фокусе"><span aria-hidden="true">★</span><b>'+fl.length+'</b></button>'+
+  (FF.open?'<div class="ffpop" role="dialog" aria-label="Задачи в фокусе"><div class="ffh"><span aria-hidden="true">★</span> <span>Супер-фокус</span></div>'+
+  (fl.length?fl.map(item).join(''):'<p class="lbl" style="margin:4px 0 8px">Пусто. В «Мешке задач» перетащите важные шарики в шар «Супер-фокус».</p>')+
+  '<button type="button" class="ghost ffgo" data-act="ffbag">Открыть мешок</button></div>':'');
+}
+document.addEventListener('pointerdown',function(e){if(FF.open&&!(e.target.closest&&e.target.closest('#ffw'))){FF.open=false;drawFocus()}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&FF.open){FF.open=false;drawFocus()}});
+document.getElementById('bdlg').addEventListener('close',function(){if(tab==='day'&&document.getElementById('cal'))drawMain()});
 function zoneBox(id){
   var s=sp(id),zs=S.zones.filter(function(z){return z.sphere===id}).sort(function(a,b){return a.s-b.s});
   var last=S.zones.length?Math.max.apply(null,S.zones.map(function(z){return z.e})):mins(S.wake);
@@ -619,6 +648,9 @@ document.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b)return;
   var a=b.dataset.act,id=b.dataset.id;
   if(a==='tab'){tab=b.dataset.tab;cdel='';render()}
+  else if(a==='ffab'){FF.open=!FF.open;drawFocus()}
+  else if(a==='ffopen'){FF.open=false;drawFocus();openBall(id)}
+  else if(a==='ffbag'){FF.open=false;tab='bag';cdel='';render()}
   else if(a==='prev')step(-1);else if(a==='next')step(1);
   else if(a==='today'){day=ymd(new Date());drawMain()}
   else if(a==='view'){view=b.dataset.v;if(view==='day')day=ymd(new Date());drawMain()}
@@ -843,6 +875,7 @@ function loop(){
 }
 function wake(){still=0;if(!raf)raf=requestAnimationFrame(loop)}
 function bagInfo(){
+  if(!document.getElementById('bcnt'))return;
   var n=bagActive().length;
   document.getElementById('bcnt').textContent='В мешке '+n+' из 50'+(n>=50?' · мешок полон':'');
   document.getElementById('bsub').disabled=n>=50;
@@ -1064,6 +1097,9 @@ var DICT={};
 ["Добавить стикер","Add sticker","Dodaj karteczkę","Додати стікер"],
 ["Удалить стикер","Delete sticker","Usuń karteczkę","Видалити стікер"],
 ["Цвет стикера","Sticker color","Kolor karteczki","Колір стікера"],
+["Задачи в фокусе","Focus tasks","Zadania w fokusie","Завдання у фокусі"],
+["Пусто. В «Мешке задач» перетащите важные шарики в шар «Супер-фокус».","Empty. In the “Task bag”, drag important balls into the “Super focus” sphere.","Pusto. W „Worku zadań” przeciągnij ważne kulki do kuli „Super fokus”.","Порожньо. У «Мішку завдань» перетягніть важливі кульки в кулю «Супер-фокус»."],
+["Открыть мешок","Open the bag","Otwórz worek","Відкрити мішок"],
 ["Уменьшить текст","Smaller text","Mniejszy tekst","Зменшити текст"],
 ["Увеличить текст","Larger text","Większy tekst","Збільшити текст"],
 ["Перетащить стикер","Drag sticker","Przeciągnij karteczkę","Перетягнути стікер"],
@@ -1190,6 +1226,7 @@ var RX=[
 [/^в календаре: (.+), (\d\d:\d\d)$/,"in calendar: $1, $2","w kalendarzu: $1, $2","в календарі: $1, $2"],
 [/^осталось (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 left","zostało $1 $2","залишилось $1 $2"],
 [/^просрочено на (\d+(?:\.\d+)?) (дн\.|нед\.|мес\.|г\.)$/,"$1 $2 overdue","po terminie o $1 $2","прострочено на $1 $2"],
+[/^срок до (.+)$/,"due $1","termin: $1","термін до $1"],
 [/^просрочено (\d+)$/,"overdue $1","po terminie: $1","прострочено $1"],
 [/^Прошло (\d+)% срока$/,"$1% of the term has passed","Minęło $1% terminu","Минуло $1% терміну"],
 [/^В мешке (\d+) из 50$/,"In the bag: $1 of 50","W worku: $1 z 50","У мішку: $1 з 50"],
