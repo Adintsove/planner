@@ -2145,7 +2145,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v79';
+var APPV='v80';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
@@ -2731,10 +2731,11 @@ async function gcSync(opt){
     var dropTask=function(tid){snapTake(true);S.tasks=S.tasks.filter(function(x){return x.id!==tid});delete g.map[tid];changed=true};
     var echoDel=[],echoN=0;
     Object.keys(g.map).slice().forEach(function(tid){
-      var m=g.map[tid],t=find(tid);if(!t||!t.gsrc||m.imp||t.repeat||m.rec)return;
+      var m=g.map[tid],t=find(tid);if(!t||m.imp||t.repeat||m.rec)return;
+      var ev=byId[m.eid];if(ev&&!ev.app)return;
       var o=orig(t);if(!o)return;
-      if(byId[m.eid]&&byId[m.eid].app)echoDel.push({eid:m.eid,cal:m.cal});
-      delete mine[m.eid];
+      if(ev)echoDel.push({eid:m.eid,cal:m.cal});
+      delete mine[m.eid];t.gsrc=1;
       if(Object.keys(g.map).some(function(k){return k!==tid&&g.map[k].eid===o.id}))dropTask(tid);
       else{g.map[tid]={eid:o.id,cal:o.cal,th:taskH(t),eh:evH(o),ts:Date.now(),imp:1};mine[o.id]=1;changed=true}
     });
@@ -2820,7 +2821,7 @@ async function gcSync(opt){
     Object.keys(g.map).forEach(function(tid){if(!find(tid))ops.push({k:'del',tid:tid})});
     S.tasks.forEach(function(t){
       var m=g.map[t.id],th=taskH(t);
-      if(!m&&t.gsrc){
+      if(!m&&(t.gsrc||(!t.repeat&&orig(t)))){
         /* задача пришла из Google: в Google не отправляем, только привязываем к исходному событию */
         var o=orig(t);
         if(o){if(mine[o.id])dropTask(t.id);else{g.map[t.id]={eid:o.id,cal:o.cal,th:th,eh:evH(o),ts:Date.now(),imp:1};mine[o.id]=1;changed=true}}
