@@ -2145,7 +2145,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v78';
+var APPV='v79';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
@@ -2725,6 +2725,33 @@ async function gcSync(opt){
     all.forEach(function(e){byId[e.id]=e});
     Object.keys(g.map).forEach(function(k){mine[g.map[k].eid]=1});
     var mineRid=function(e){if(mine[e.id]||mine[e.rid])return true;var k=e.id.indexOf('_');return k>0&&!!mine[e.id.slice(0,k)]};
+    /* 0а. «Эхо»: задача пришла из Google, но приложение по ошибке отправило её обратно как свою.
+       Копию удаляем из Google, задачу привязываем к исходному событию (или убираем, если исходное уже привязано). */
+    var orig=function(t){return all.filter(function(e){return !e.app&&!e.ad&&e.d2===e.d&&e.t===t.title&&e.d===t.date&&e.s===mins(t.start)})[0]};
+    var dropTask=function(tid){snapTake(true);S.tasks=S.tasks.filter(function(x){return x.id!==tid});delete g.map[tid];changed=true};
+    var echoDel=[],echoN=0;
+    Object.keys(g.map).slice().forEach(function(tid){
+      var m=g.map[tid],t=find(tid);if(!t||!t.gsrc||m.imp||t.repeat||m.rec)return;
+      var o=orig(t);if(!o)return;
+      if(byId[m.eid]&&byId[m.eid].app)echoDel.push({eid:m.eid,cal:m.cal});
+      delete mine[m.eid];
+      if(Object.keys(g.map).some(function(k){return k!==tid&&g.map[k].eid===o.id}))dropTask(tid);
+      else{g.map[tid]={eid:o.id,cal:o.cal,th:taskH(t),eh:evH(o),ts:Date.now(),imp:1};mine[o.id]=1;changed=true}
+    });
+    /* копии без задачи: событие приложения, точно повторяющее чужое событие */
+    all.forEach(function(e){
+      if(!e.app||e.rid||mineRid(e)||e.ad)return;
+      if(all.some(function(x){return !x.app&&x.t===e.t&&x.d===e.d&&x.s===e.s&&x.em===e.em&&x.d2===e.d2}))echoDel.push({eid:e.id,cal:e.cal});
+    });
+    /* две задачи на одно событие Google: лишнюю убираем */
+    var byEv={};
+    Object.keys(g.map).slice().forEach(function(tid){var m=g.map[tid];if(!m.imp||!find(tid))return;if(byEv[m.eid])dropTask(tid);else byEv[m.eid]=tid});
+    for(var ei=0;ei<echoDel.length&&echoN<25;ei++){
+      var ed=echoDel[ei];if(!byId[ed.eid])continue;
+      try{await gcCall('delete_event',ed.cal&&ed.cal!=='primary'?{eventId:ed.eid,calendarId:ed.cal,notificationLevel:'NONE'}:{eventId:ed.eid,notificationLevel:'NONE'})}
+      catch(e){if(!e||e.code!=='tool_error')throw e}
+      delete byId[ed.eid];all=all.filter(function(x){return x.id!==ed.eid});echoN++;changed=true;
+    }
     /* 0. Свои же события, ошибочно вернувшиеся как задачи, убираем */
     Object.keys(g.map).slice().forEach(function(tid){
       var m=g.map[tid],ev=byId[m.eid];
@@ -2762,6 +2789,8 @@ async function gcSync(opt){
     /* события Google -> задачи */
     if(g.pull)all.forEach(function(e){
       if(e.app||e.ad||e.d2!==e.d||e.em<=e.s||e.em-e.s>720||!show[e.cal]||mineRid(e)||g.skip[e.id]||e.d<today||(e.d===today&&e.em<=nowm)||cnt>=150)return;
+      var ex=S.tasks.filter(function(x){var mx=g.map[x.id];return !x.repeat&&x.title===e.t&&x.date===e.d&&x.start===hm(e.s)&&(!mx||(mx.imp&&!byId[mx.eid]))})[0];
+      if(ex){g.map[ex.id]={eid:e.id,cal:e.cal,th:taskH(ex),eh:evH(e),ts:Date.now(),imp:1};ex.gsrc=1;mine[e.id]=1;changed=true;return}
       var t={id:uid(),title:e.t,sphere:(S.spheres.some(function(x){return x.id===g.sph})?g.sph:S.spheres[0].id),start:hm(e.s),dur:e.em-e.s,date:e.d,gsrc:1};
       S.tasks.push(t);g.map[t.id]={eid:e.id,cal:e.cal,th:taskH(t),eh:evH(e),ts:Date.now(),imp:1};mine[e.id]=1;cnt++;changed=true;
     });
@@ -2791,6 +2820,12 @@ async function gcSync(opt){
     Object.keys(g.map).forEach(function(tid){if(!find(tid))ops.push({k:'del',tid:tid})});
     S.tasks.forEach(function(t){
       var m=g.map[t.id],th=taskH(t);
+      if(!m&&t.gsrc){
+        /* задача пришла из Google: в Google не отправляем, только привязываем к исходному событию */
+        var o=orig(t);
+        if(o){if(mine[o.id])dropTask(t.id);else{g.map[t.id]={eid:o.id,cal:o.cal,th:th,eh:evH(o),ts:Date.now(),imp:1};mine[o.id]=1;changed=true}}
+        return;
+      }
       if(!m){
         if(t.repeat?(!t.until||t.until>=today):t.date>=today){
           var cand=appEv.filter(function(e){var b=e.rid||e.id;return !mine[b]&&e.t===t.title&&e.s===mins(t.start)&&(t.repeat?!!e.rid:(!e.rid&&e.d===t.date))})[0];
