@@ -378,6 +378,7 @@ var WEB=!window.claude&&!/claude\.ai|claudeusercontent/.test(location.hostname);
 /* Настройки проекта Firebase и Client ID Google — не секрет, данные защищают правила Firestore */
 var FB_CFG={apiKey:'AIzaSyBg3Nt7kB-b4WtRaaE6EB7EMZQqjYetBZk',authDomain:'adn-planner.firebaseapp.com',projectId:'adn-planner',storageBucket:'adn-planner.firebasestorage.app',messagingSenderId:'814690311076',appId:'1:814690311076:web:aa7eea28d563c68cecbf31'};
 var GC_CLIENT='';
+var FBV='10.12.2'; /* объявлено здесь, до запуска входа: раньше версия была undefined и скрипты Firebase не загружались */
 var SP=[{id:'family',n:'Семья',c:'#D9482B'},{id:'friends',n:'Друзья',c:'#B97A00'},{id:'work',n:'Дело',c:'#2A7BA6'},{id:'body',n:'Тело и ум',c:'#2E9A62'},{id:'love',n:'Отношения',c:'#8A4FD0'}];
 var PX=1.2,KEY='planner-v1',WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return {wake:'07:00',bed:'23:00',goals:[],tasks:[],done:{},colors:{}}}
@@ -2145,7 +2146,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v80';
+var APPV='v81';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
@@ -2324,7 +2325,7 @@ function synStart(db,id){
   }catch(e){setSyn('off')}
 })();
 /* ----- вход через Google (Firebase) ----- */
-var ACC={user:null,ready:false},FBV='10.12.2';
+var ACC={user:null,ready:false};
 function loadJs(src){return new Promise(function(res,rej){var e=document.createElement('script');e.src=src;e.onload=res;e.onerror=rej;document.head.appendChild(e)})}
 async function fbInit(){
   if(!FB_CFG){ACC.ready=true;return}
