@@ -15,6 +15,7 @@ cd planner
 firebase login --no-localhost
 firebase use adn-planner
 firebase functions:secrets:set ANTHROPIC_API_KEY
+cd functions && npm install && cd ..
 firebase deploy --only functions
 ```
    - `firebase login --no-localhost` покажет ссылку: откройте её, войдите в Google, скопируйте код и вставьте в терминал.
@@ -23,7 +24,7 @@ firebase deploy --only functions
 3. Через пару минут появится `Deploy complete`. В приложении (Ежедневник) над кнопкой микрофона появится кнопка помощника.
 
 ## Обновление и настройки
-- Новая версия функции: в Cloud Shell `cd planner && git pull && firebase deploy --only functions`.
+- Новая версия функции: в Cloud Shell `cd planner && git pull && cd functions && npm install && cd .. && firebase deploy --only functions`.
 - Модель по умолчанию `claude-sonnet-5-5`. Для более дешёвой можно указать `claude-haiku-5-5` в параметре `ASSISTANT_MODEL` (файл `functions/.env`, строка `ASSISTANT_MODEL=claude-haiku-5-5`, затем деплой).
 - Лимит запросов в сутки: параметр `ASSISTANT_DAILY_LIMIT` (по умолчанию 80).
 
