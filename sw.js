@@ -1,5 +1,5 @@
 /* ADN Planner: работа без интернета. Страница — сначала из сети (чтобы приходили обновления), без сети — из кэша. */
-const C = 'adn-v1';
+const C = 'adn-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(SHELL)));
@@ -13,7 +13,7 @@ self.addEventListener('fetch', e => {
   if (r.method !== 'GET') return;
   const u = new URL(r.url);
   if (u.origin === location.origin) {
-    e.respondWith(fetch(r).then(res => {
+    e.respondWith(fetch(r, { cache: 'no-cache' }).then(res => {
       if (res.ok) { const cp = res.clone(); caches.open(C).then(c => c.put(r, cp)); }
       return res;
     }).catch(() => caches.match(r).then(m => m || caches.match('./index.html'))));
