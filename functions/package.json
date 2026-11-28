@@ -1,0 +1,12 @@
+{
+  "name": "adn-planner-functions",
+  "description": "Сервер помощника ADN Planner (Firebase Cloud Functions)",
+  "private": true,
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "scripts": { "test": "node test.js" },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

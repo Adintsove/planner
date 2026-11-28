@@ -276,6 +276,22 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 .synl{margin:12px 16px 24px;text-align:center;font-size:12px;color:var(--muted)}
 .mic{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;width:58px;height:58px;border-radius:50%;border:0;background:var(--btn);color:var(--btnink);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .mic[hidden]{display:none}
+.mic.ast{bottom:calc(90px + env(safe-area-inset-bottom,0px));width:48px;height:48px;right:21px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.adlg{width:min(94vw,560px);height:min(82vh,640px);padding:12px;flex-direction:column;gap:8px}.adlg[open]{display:flex}
+.adlg .ah{display:flex;align-items:center;gap:6px}.adlg .ah h2{margin:0;font-size:18px}
+.ic.sm{min-width:36px;min-height:36px;font-size:20px;padding:0}
+.am{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
+.am .mu,.am .ma{max-width:88%;padding:8px 12px;border-radius:14px;line-height:1.4;font-size:14.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.am .mu{align-self:flex-end;background:var(--btn);color:var(--btnink);border-bottom-right-radius:4px}
+.am .ma{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
+.am .ma.er{color:#B3261E;border-color:#B3261E}
+.am .mh{align-self:center;text-align:center;color:var(--muted);font-size:13px;line-height:1.45;padding:12px 8px}
+.am .acts{align-self:flex-start;max-width:96%;border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.am .acts .ar{font-size:13.5px;line-height:1.35}.am .acts .ab{display:flex;gap:8px;margin-top:2px}
+.am .acts .ab .btn{padding:6px 14px;min-height:36px}.am .acts .st{font-size:13px;color:var(--muted)}
+.aq{display:flex;flex-wrap:wrap;gap:6px}.aq button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.afrm{flex-direction:row!important;align-items:center;gap:6px!important}.afrm input[type=text]{flex:1;min-width:0}
+.ic.rec{background:#D9482B;color:#fff;border-color:#D9482B}
 .mic.rec{background:#D9482B;color:#fff;animation:micp 1.1s infinite}
 @keyframes micp{0%{box-shadow:0 0 0 0 rgba(217,72,43,.55)}100%{box-shadow:0 0 0 18px rgba(217,72,43,0)}}
 @media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
@@ -321,9 +337,14 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 </div>
 <div id="view"></div>
 <button type="button" class="mic" id="mic" aria-label="Голосовая задача" title="Голосовая задача" hidden><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg></button>
+<button type="button" class="mic ast" id="ast" aria-label="Помощник" title="Помощник" hidden><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4M10 9h4"/></svg></button>
 <div class="vt" id="vt" role="status" hidden></div>
 <p class="synl" id="syn" role="status">Без синхронизации: данные только на этом устройстве</p>
 </main>
+<dialog id="adlg" class="adlg" aria-label="Помощник"><div class="ah"><h2>Помощник</h2><span style="flex:1"></span><button type="button" class="ic sm" id="anew" title="Новый диалог" aria-label="Новый диалог">⟲</button><button type="button" class="ic sm" id="aclose" title="Закрыть" aria-label="Закрыть">×</button></div>
+<div class="am" id="am" role="log" aria-live="polite"></div>
+<div class="aq" id="aq"></div>
+<form id="af" class="afrm"><input type="text" id="ai" maxlength="500" placeholder="Спросите или попросите что-нибудь…" autocomplete="off" aria-label="Сообщение помощнику"><button type="button" class="ic sm" id="amic" title="Диктовать" aria-label="Диктовать"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button><button class="btn" type="submit" id="asend">Отправить</button></form></dialog>
 <dialog id="dlg"><form id="ef">
   <h2>Задача</h2>
   <input type="text" id="et" required maxlength="120" aria-label="Название">
@@ -433,7 +454,7 @@ function label(){
   var d=dates();return pd(d[0]).toLocaleDateString(LOC[LANG],{day:'numeric',month:'short'})+' – '+pd(d[6]).toLocaleDateString(LOC[LANG],{day:'numeric',month:'short',year:'numeric'});
 }
 function render(){
-  var mcb=document.getElementById('mic');if(mcb)mcb.hidden=tab!=='day';
+  var mcb=document.getElementById('mic');if(mcb)mcb.hidden=tab!=='day';var asb=document.getElementById('ast');if(asb)asb.hidden=tab!=='day'||!WEB;
   document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===tab)});
   document.querySelector('.gear').setAttribute('aria-pressed',tab==='set');
   var v=document.getElementById('view');
@@ -2240,7 +2261,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v84';
+var APPV='v85';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
@@ -2689,6 +2710,144 @@ D('Голосовой ввод не поддерживается в этом б�
 D('Нет доступа к микрофону. Разрешите его в настройках браузера.','No microphone access. Allow it in your browser settings.','Brak dostępu do mikrofonu. Zezwól na niego w ustawieniach przeglądarki.','Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.');
 D('Не расслышал. Попробуйте ещё раз.','Didn’t catch that. Please try again.','Nie dosłyszałem. Spróbuj jeszcze raz.','Не розчув. Спробуйте ще раз.');
 D('Голосовой ввод сейчас недоступен','Voice input is unavailable right now','Wprowadzanie głosowe jest teraz niedostępne','Голосове введення зараз недоступне');
+})();
+
+/* ===== Помощник: чат с Claude через нашу функцию в Firebase ===== */
+var AS={msgs:[],busy:false,fn:null,vr:null};
+try{AS.msgs=(JSON.parse(localStorage.getItem('planner-chat')||'[]')||[]).slice(-30)}catch(e){}
+function asSave(){try{localStorage.setItem('planner-chat',JSON.stringify(AS.msgs.filter(function(m){return !m.err}).slice(-30)))}catch(e){}}
+function asSph(id){return S.spheres.some(function(x){return x.id===id})?id:(S.spheres[0]&&S.spheres[0].id)||'work'}
+function asCtx(){
+  var t0=ymd(new Date()),n=new Date(),i,d,tasks=[],stats=[],e;
+  for(i=-3;i<=10;i++){d=addD(t0,i);tasksOn(d).forEach(function(t){if(tasks.length<150)tasks.push({id:t.id,t:t.title,d:d,s:t.start,du:t.dur,rep:t.repeat?1:0,ok:isDone(t,d)?1:0})})}
+  for(i=-14;i<=0;i++){d=addD(t0,i);e=dayEff(d);if(e)stats.push({d:d,p:e.p,n:e.n,t:e.t})}
+  return {
+    now:t0+' '+hm(n.getHours()*60+n.getMinutes())+', '+WD[(n.getDay()+6)%7],
+    spheres:S.spheres.map(function(x){return {id:x.id,n:x.n}}),
+    tasks:tasks,
+    bag:bagActive().slice(0,50).map(function(b){return {id:b.id,t:b.title,imp:b.imp,due:b.due||''}}),
+    goals:S.goals.filter(function(g){return !g.done}).slice(0,30).map(function(g){return {t:g.title,sphere:g.sphere,end:g.end||''}}),
+    laws:lawsOn(t0).map(function(x){return x.t}),
+    stats:stats
+  };
+}
+function asLabel(a){
+  var i=a.input,t=i.id&&find(i.id),ti=t?t.title:'?',s;
+  if(a.tool==='create_task')return tr('Добавить задачу')+' «'+i.title+'» — '+fd(i.date)+', '+i.start+', '+(i.dur||30)+' '+tr('мин');
+  if(a.tool==='update_task'){s=[];if(i.title)s.push('«'+i.title+'»');if(i.date)s.push(fd(i.date));if(i.start)s.push(i.start);if(i.dur)s.push(i.dur+' '+tr('мин'));return tr('Изменить задачу')+' «'+ti+'» → '+s.join(', ')}
+  if(a.tool==='complete_task')return tr(i.done?'Отметить выполненной':'Снять отметку')+' «'+ti+'» — '+fd(i.date);
+  if(a.tool==='delete_task')return tr('Удалить задачу')+' «'+ti+'»';
+  if(a.tool==='add_ball')return tr('Добавить шарик в мешок')+' «'+i.title+'»'+(i.due?' — '+fd(i.due):'');
+  return a.tool;
+}
+function asApply(a){
+  var i=a.input,t,k;
+  if(a.tool==='create_task'){S.tasks.push({id:uid(),title:i.title,sphere:asSph(i.sphere),start:i.start,dur:i.dur||30,date:i.date,repeat:false});return true}
+  if(a.tool==='update_task'){t=find(i.id);if(!t)return false;if(i.title)t.title=i.title;if(i.date&&!t.repeat)t.date=i.date;if(i.start)t.start=i.start;if(i.dur)t.dur=i.dur;return true}
+  if(a.tool==='complete_task'){t=find(i.id);if(!t)return false;k=t.id+'|'+i.date;if(i.done)S.done[k]=true;else delete S.done[k];return true}
+  if(a.tool==='delete_task'){t=find(i.id);if(!t)return false;S.tasks=S.tasks.filter(function(x){return x!==t});S.bag.forEach(function(b){if(b.tid===t.id)b.tid=null});return true}
+  if(a.tool==='add_ball'){if(bagActive().length>=50)return false;var nb={id:uid(),title:i.title,sphere:asSph(i.sphere),imp:i.imp||3,tid:null};if(i.due){nb.due=i.due;nb.cr=Date.now()}S.bag.push(nb);return true}
+  return false;
+}
+function asApplyMsg(m){
+  var ok=0,bad=0;
+  try{snapTake(true)}catch(e){}
+  (m.a||[]).forEach(function(a){if(asApply(a))ok++;else bad++});
+  save();m.st='done';m.res=tr('Применено изменений: ')+ok+(bad?'. '+tr('Не удалось применить: ')+bad:'');
+  asSave();asRender();if(tab==='day')drawMain();else render();runTr();
+}
+function asBox(){return document.getElementById('am')}
+function asRender(){
+  var box=asBox();if(!box)return;box.innerHTML='';
+  if(!AS.msgs.length){var h=document.createElement('div');h.className='mh';h.textContent=tr('Я вижу ваши задачи, шарики, цели и законы и отправляю их на сервер, чтобы ответить. Спросите про день, неделю или дисциплину либо попросите перенести и добавить задачи.');box.appendChild(h)}
+  AS.msgs.forEach(function(m,mi){
+    var d=document.createElement('div');d.className=(m.r==='user'?'mu':'ma')+(m.err?' er':'');d.textContent=m.t;box.appendChild(d);
+    if(m.a&&m.a.length){
+      var c=document.createElement('div');c.className='acts';
+      m.a.forEach(function(a){var r=document.createElement('div');r.className='ar';r.textContent='• '+asLabel(a);c.appendChild(r)});
+      if(m.st==='done'||m.st==='skip'){var s=document.createElement('div');s.className='st';s.textContent=m.st==='skip'?tr('Отклонено'):m.res;c.appendChild(s)}
+      else{var b=document.createElement('div');b.className='ab';b.innerHTML='<button type="button" class="btn" data-ap="'+mi+'">'+tr('Применить')+'</button><button type="button" class="btn ghost" data-sk="'+mi+'">'+tr('Отклонить')+'</button>';c.appendChild(b)}
+      box.appendChild(c)
+    }
+  });
+  if(AS.busy){var w=document.createElement('div');w.className='ma';w.textContent=tr('Думаю…');box.appendChild(w)}
+  var q=document.getElementById('aq');
+  if(q){q.innerHTML=AS.msgs.length||AS.busy?'':['Что у меня сегодня главное?','Разбери мою неделю','Как мне улучшить дисциплину?'].map(function(x){return '<button type="button" data-q="'+esc(x)+'">'+tr(x)+'</button>'}).join('')}
+  box.scrollTop=box.scrollHeight;
+}
+async function asFn(){
+  if(!window.firebase||!firebase.auth||!firebase.auth().currentUser)throw {code:'asnologin'};
+  if(AS.fn)return AS.fn;
+  if(!firebase.functions)await loadJs('https://www.gstatic.com/firebasejs/'+FBV+'/firebase-functions-compat.js');
+  AS.fn=firebase.app().functions('europe-west1').httpsCallable('assistant',{timeout:65000});return AS.fn;
+}
+function asErr(e){
+  var c=(e&&e.code)||'',m=(e&&e.message)||'';
+  if(c==='asnologin'||c==='functions/unauthenticated')return tr('Войдите через Google в Настройках, чтобы пользоваться помощником.');
+  if(c==='functions/not-found'||/NOT_FOUND|not found/i.test(m)&&!/задач/.test(m))return tr('Помощник ещё не подключён на сервере. Его нужно один раз развернуть (инструкция в файле functions/README.md).');
+  if(/^functions\/(permission-denied|resource-exhausted|failed-precondition|invalid-argument)$/.test(c)&&m&&m!==c)return m;
+  return tr('Нет связи с сервером. Попробуйте ещё раз.');
+}
+async function asSend(text){
+  text=(text||'').trim();if(!text||AS.busy)return;
+  AS.msgs.push({r:'user',t:text.slice(0,500)});AS.busy=true;asRender();
+  try{
+    var fn=await asFn(),hist=AS.msgs.filter(function(m){return !m.err}).slice(-12).map(function(m){return {role:m.r==='user'?'user':'assistant',content:m.t}});
+    var r=await fn({messages:hist,ctx:asCtx()}),dt=r.data||{},acts=dt.actions||[];
+    AS.msgs.push({r:'assistant',t:dt.text||(acts.length?tr('Предлагаю такие изменения:'):'…'),a:acts,st:acts.length?'new':''});
+  }catch(e){AS.msgs.push({r:'assistant',t:asErr(e),err:true})}
+  AS.busy=false;asSave();asRender();runTr();
+}
+function asDict(){
+  var mb=document.getElementById('amic'),inp=document.getElementById('ai');
+  if(AS.vr){try{AS.vr.stop()}catch(e){}return}
+  if(!VSR){AS.msgs.push({r:'assistant',t:tr('Голосовой ввод не поддерживается в этом браузере'),err:true});asRender();return}
+  var r=new VSR(),fin='';r.lang=LOC[LANG]||'ru-RU';r.interimResults=true;r.continuous=false;
+  r.onresult=function(e){var t='',i;for(i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)fin=t}inp.value=t};
+  r.onerror=function(){fin=''};
+  r.onend=function(){AS.vr=null;mb.classList.remove('rec');if(fin){inp.value='';asSend(fin)}};
+  try{r.start();AS.vr=r;mb.classList.add('rec')}catch(e){AS.vr=null}
+}
+document.getElementById('ast').addEventListener('click',function(){var d=document.getElementById('adlg');asRender();runTr();if(!d.open)d.showModal();setTimeout(function(){var i=document.getElementById('ai');if(i&&!/iPad|iPhone|Android/.test(navigator.userAgent))i.focus()},50)});
+document.getElementById('aclose').addEventListener('click',function(){document.getElementById('adlg').close()});
+document.getElementById('anew').addEventListener('click',function(){AS.msgs=[];asSave();asRender();runTr()});
+document.getElementById('amic').addEventListener('click',asDict);
+document.getElementById('af').addEventListener('submit',function(e){e.preventDefault();var i=document.getElementById('ai'),t=i.value;i.value='';asSend(t)});
+document.getElementById('adlg').addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('button');if(!b)return;
+  if(b.dataset.ap!==undefined)asApplyMsg(AS.msgs[+b.dataset.ap]);
+  else if(b.dataset.sk!==undefined){AS.msgs[+b.dataset.sk].st='skip';asSave();asRender();runTr()}
+  else if(b.dataset.q)asSend(b.dataset.q);
+});
+(function(){function D(r,e,p,u){if(!DICT[r])DICT[r]=[e,p,u]}
+D('Помощник','Assistant','Asystent','Помічник');
+D('Новый диалог','New chat','Nowa rozmowa','Новий діалог');
+D('Закрыть','Close','Zamknij','Закрити');
+D('Отправить','Send','Wyślij','Надіслати');
+D('Диктовать','Dictate','Dyktuj','Диктувати');
+D('Сообщение помощнику','Message to the assistant','Wiadomość do asystenta','Повідомлення помічнику');
+D('Спросите или попросите что-нибудь…','Ask or request something…','Zapytaj lub poproś o coś…','Запитайте або попросіть щось…');
+D('Я вижу ваши задачи, шарики, цели и законы и отправляю их на сервер, чтобы ответить. Спросите про день, неделю или дисциплину либо попросите перенести и добавить задачи.','I can see your tasks, balls, goals and laws, and send them to the server to answer. Ask about your day, week or discipline, or ask me to move and add tasks.','Widzę Twoje zadania, kulki, cele i prawa i wysyłam je na serwer, aby odpowiedzieć. Zapytaj o dzień, tydzień lub dyscyplinę albo poproś o przeniesienie i dodanie zadań.','Я бачу ваші завдання, кульки, цілі та закони й надсилаю їх на сервер, щоб відповісти. Запитайте про день, тиждень чи дисципліну або попросіть перенести й додати завдання.');
+D('Что у меня сегодня главное?','What matters most today?','Co jest dziś najważniejsze?','Що в мене сьогодні головне?');
+D('Разбери мою неделю','Review my week','Przeanalizuj mój tydzień','Розбери мій тиждень');
+D('Как мне улучшить дисциплину?','How can I improve my discipline?','Jak poprawić dyscyplinę?','Як мені покращити дисципліну?');
+D('Думаю…','Thinking…','Myślę…','Думаю…');
+D('Предлагаю такие изменения:','I suggest these changes:','Proponuję takie zmiany:','Пропоную такі зміни:');
+D('Применить','Apply','Zastosuj','Застосувати');
+D('Отклонить','Dismiss','Odrzuć','Відхилити');
+D('Отклонено','Dismissed','Odrzucono','Відхилено');
+D('Применено изменений: ','Changes applied: ','Zastosowane zmiany: ','Застосовано змін: ');
+D('Не удалось применить: ','Could not apply: ','Nie udało się zastosować: ','Не вдалося застосувати: ');
+D('Добавить задачу','Add task','Dodaj zadanie','Додати завдання');
+D('Изменить задачу','Change task','Zmień zadanie','Змінити завдання');
+D('Отметить выполненной','Mark as done','Oznacz jako wykonane','Позначити виконаним');
+D('Снять отметку','Unmark','Odznacz','Зняти позначку');
+D('Удалить задачу','Delete task','Usuń zadanie','Видалити завдання');
+D('Добавить шарик в мешок','Add ball to the bag','Dodaj kulkę do worka','Додати кульку в мішок');
+D('мин','min','min','хв');
+D('Войдите через Google в Настройках, чтобы пользоваться помощником.','Sign in with Google in Settings to use the assistant.','Zaloguj się przez Google w Ustawieniach, aby korzystać z asystenta.','Увійдіть через Google у Налаштуваннях, щоб користуватися помічником.');
+D('Помощник ещё не подключён на сервере. Его нужно один раз развернуть (инструкция в файле functions/README.md).','The assistant is not connected on the server yet. It must be deployed once (see functions/README.md).','Asystent nie jest jeszcze połączony z serwerem. Trzeba go raz wdrożyć (instrukcja w functions/README.md).','Помічник ще не підключений на сервері. Його потрібно один раз розгорнути (інструкція у functions/README.md).');
+D('Нет связи с сервером. Попробуйте ещё раз.','No connection to the server. Please try again.','Brak połączenia z serwerem. Spróbuj ponownie.','Немає зв’язку із сервером. Спробуйте ще раз.');
 })();
 
 /* ===== Google Календарь: двусторонняя синхронизация (mcp) ===== */
