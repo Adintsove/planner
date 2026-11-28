@@ -1429,7 +1429,8 @@ function drawNotes(){
 function initNote(lc,d){
   lc.innerHTML=noteMarkup();
   var ned=lc.querySelector('#ned'),cv=lc.querySelector('#ncv'),page=lc.querySelector('#npage'),st=lc.querySelector('#nst'),cx=cv.getContext('2d'),
-  tm=null,undo=[],ink=false,loading=false,stroke=null,saveVer=0,lastPen=0,stretched=!!(S.notes[d]&&S.notes[d].lh),saved=S.notes[d]||{};
+  tm=null,undo=[],ink=false,loading=false,stroke=null,saveVer=0,lastPen=0,stretched=!!(S.notes[d]&&S.notes[d].lh),saved=S.notes[d]||{},
+  strokes=(saved.v||[]).filter(function(e){return e&&e.q&&e.q.length}),bgd=saved.d||'',bgi=null,bgh=saved.bh||saved.lh||0;
   ned.setAttribute('data-ph',tr('Пишите заметку к этому дню…'));
   var mig=[],layer=lc.querySelector('#nimgs'),selId=null,gi=null,imgs=(saved.im||[]).map(function(o){return {id:uid(),src:o.s,x:o.x,y:o.y,w:o.w,r:o.r}});
   var sl=lc.querySelector('#nstks'),gs=null,stks=(saved.sk||[]).map(function(o){return {id:uid(),x:o.x,y:o.y,w:o.w,h:o.h,c:o.c,fs:o.fs||22,t:o.t||'',d:o.d||'',cw:o.cw||o.w,ch:o.ch||o.h}});
@@ -1497,9 +1498,10 @@ function initNote(lc,d){
     n=Math.min(n,4000);if(n<=LH)return;
     var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);
     var oh=LH,ok=K,nk=Math.min(K,kmax(n));M.base=null;LH=n;
-    if(nk<ok-0.001){K=nk;undo=[];stks.forEach(function(o){sCanvas(o,o.cv,K/ok)})}
+    var kch=nk<ok-0.001;if(kch){K=nk;undo=[];stks.forEach(function(o){sCanvas(o,o.cv,K/ok)})}
     cv.width=Math.round(LW*K);cv.height=Math.round(LH*K);cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingQuality='high';
-    cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0,Math.round(LW*K),Math.round(oh*K));cx.restore();layout()
+    if(kch&&(strokes.length||bgi))redrawPage();else{cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0,Math.round(LW*K),Math.round(oh*K));cx.restore()}
+    layout()
   }
   /* экран стал шире (поворот планшета): поднимаем разрешение, чтобы новые штрихи были чёткими */
   function upK(w){
@@ -1507,15 +1509,46 @@ function initNote(lc,d){
     var t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;t.getContext('2d').drawImage(cv,0,0);
     K=nk;M.base=null;undo=[];
     cv.width=Math.round(LW*K);cv.height=Math.round(LH*K);cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingQuality='high';
-    cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0,cv.width,cv.height);cx.restore();
+    if(strokes.length||bgi)redrawPage();else{cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(t,0,0,cv.width,cv.height);cx.restore()}
     stks.forEach(function(o){sCanvas(o,o.cv,K/ok)})
   }
   layout();imgs.forEach(mk);stks.forEach(sMk);fit();
   mig.forEach(function(src){var im=new Image();im.onload=function(){var w=Math.min(460,im.width),r=im.height/im.width,y=imgs.reduce(function(m,o){return Math.max(m,o.y+o.w*o.r+20)},Math.ceil(ned.scrollHeight*LW/(page.clientWidth||300))+10),o={id:uid(),src:src,x:30,y:y,w:w,r:r};imgs.push(o);mk(o);fit();later()};im.src=src});
-  if(saved.d){loading=true;var im=new Image();im.onload=function(){cx.drawImage(im,0,0,LW,saved.lh||(im.height*LW/im.width));ink=true;loading=false};im.onerror=function(){loading=false};im.src=saved.d}
+  /* ===== векторный рисунок: штрихи хранятся как точки и рисуются заново в любом разрешении ===== */
+  function wdv(st,pr){return st.o?st.w*(0.35+pr*1.3):st.w}
+  function drawStroke(st){
+    var q=st.q,n=Math.floor(q.length/3),xs=new Array(n),ys=new Array(n),ps=new Array(n),i,x=0,y=0,v=0,m;
+    if(!n)return;
+    for(i=0;i<n;i++){x+=q[3*i];y+=q[3*i+1];v+=q[3*i+2];xs[i]=x/10;ys[i]=y/10;ps[i]=v/100}
+    cx.save();cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=st.c;cx.fillStyle=st.c;
+    if(st.t==='m'){
+      cx.globalAlpha=.4;cx.lineWidth=st.w;cx.beginPath();cx.moveTo(xs[0],ys[0]);
+      for(i=1;i<n-1;i++)cx.quadraticCurveTo(xs[i],ys[i],(xs[i]+xs[i+1])/2,(ys[i]+ys[i+1])/2);
+      cx.lineTo(xs[n-1],ys[n-1]);if(n===1)cx.lineTo(xs[0]+.01,ys[0]);cx.stroke();cx.restore();return
+    }
+    cx.globalCompositeOperation=st.t==='e'?'destination-out':'source-over';
+    cx.beginPath();cx.arc(xs[0],ys[0],wdv(st,ps[0])/2,0,6.2832);cx.fill();
+    var lx=xs[0],ly=ys[0],mx=lx,my=ly,w0=wdv(st,ps[0]),w,open=false;
+    for(i=1;i<n;i++){
+      w=wdv(st,ps[i]);
+      if(!open||Math.abs(w-w0)>0.12){if(open)cx.stroke();cx.lineWidth=w;w0=w;cx.beginPath();cx.moveTo(mx,my);open=true}
+      m=[(lx+xs[i])/2,(ly+ys[i])/2];cx.quadraticCurveTo(lx,ly,m[0],m[1]);lx=xs[i];ly=ys[i];mx=m[0];my=m[1]
+    }
+    if(open)cx.stroke();
+    cx.restore()
+  }
+  function redrawPage(){
+    if(stroke||penDown){setTimeout(redrawPage,150);return}
+    cx.save();cx.setTransform(1,0,0,1,0,0);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.clearRect(0,0,cv.width,cv.height);cx.restore();
+    if(bgi)cx.drawImage(bgi,0,0,LW,bgh||(bgi.height*LW/bgi.width));
+    strokes.forEach(drawStroke);M.base=null
+  }
+  if(strokes.length||bgd)ink=true;
+  if(bgd){loading=true;var im=new Image();im.onload=function(){bgi=im;if(!bgh)bgh=im.height*LW/im.width;loading=false;redrawPage()};im.onerror=function(){loading=false;redrawPage()};im.src=bgd}
+  else if(strokes.length)redrawPage();
   function inkBlank(){var c=document.createElement('canvas');c.width=256;c.height=Math.max(1,Math.round(256*cv.height/cv.width));var g=c.getContext('2d');g.drawImage(cv,0,0,c.width,c.height);var a=g.getImageData(0,0,c.width,c.height).data;for(var i=3;i<a.length;i+=4)if(a[i])return false;return true}
   function commit(rec){
-    if(rec.h||rec.d||rec.im||rec.sk||rec.lh)S.notes[d]=rec;else delete S.notes[d];
+    if(rec.h||rec.d||rec.v||rec.im||rec.sk||rec.lh)S.notes[d]=rec;else delete S.notes[d];
     save();st.textContent=saveErr?'Не удалось сохранить: память браузера заполнена. Удалите лишние картинки или рисунки.':'';
   }
   function saveNow(sync){
@@ -1531,21 +1564,21 @@ function initNote(lc,d){
     if(!blank)rec.h=h;
     if(stretched)rec.lh=LH;
     ++saveVer;
-    if(loading){if(saved.d){rec.d=saved.d;rec.lh=saved.lh}commit(rec);return}
-    ink=ink&&!inkBlank();
-    if(!ink){commit(rec);return}
-    if(sync!==true&&cv.toBlob){
-      var ver=saveVer,lh=LH;
-      cv.toBlob(function(bl){
-        if(!bl||ver!==saveVer)return;
-        var fr=new FileReader();fr.onload=function(){if(ver!==saveVer)return;rec.d=fr.result;rec.lh=lh;commit(rec)};fr.readAsDataURL(bl);
-      },'image/png');
-      return;
-    }
-    try{rec.d=cv.toDataURL('image/png');rec.lh=LH}catch(e){}
+    if(strokes.length)rec.v=strokes.slice();
+    if(bgd){rec.d=bgd;rec.bh=Math.round(bgh)}
+    if(strokes.length||bgd)rec.lh=LH;
     commit(rec);
   }
-  function tick(){tm=null;if(stroke||ntch>0||penDown||Date.now()-lastPen<3000){tm=setTimeout(tick,800);return}saveNow(false)}
+  /* очень длинный рисунок: старые штрихи склеиваются в картинку-подложку, чтобы запись не росла бесконечно */
+  function flatten(cb){
+    if(!cv.toBlob||loading||stroke){cb();return}
+    var snapC=copyCv(),ver=saveVer;
+    snapC.toBlob(function(bl){
+      if(!bl||stroke||penDown||strokes.length<2000){cb();return}
+      var fr=new FileReader();fr.onload=function(){if(stroke||penDown){cb();return}bgd=fr.result;bgi=snapC;bgh=LH;strokes=[];undo=[];M.base=null;cb()};fr.onerror=function(){cb()};fr.readAsDataURL(bl)
+    },'image/png')
+  }
+  function tick(){tm=null;if(stroke||ntch>0||penDown||Date.now()-lastPen<3000){tm=setTimeout(tick,800);return}if(strokes.length>=2500)flatten(function(){saveNow(false)});else saveNow(false)}
   function later(ms){clearTimeout(tm);tm=setTimeout(tick,ms||600)}
   var ro=new ResizeObserver(function(){var w=page.clientWidth;if(!w)return;upK(w);layout();var need=Math.ceil(ned.scrollHeight*LW/w);if(need>LH+4)grow(need)});
   ro.observe(page);ro.observe(ned);
@@ -1656,7 +1689,7 @@ function initNote(lc,d){
   function copyCv(c){c=c||cv;var t=document.createElement('canvas');t.width=c.width;t.height=c.height;t.getContext('2d').drawImage(c,0,0);return t}
   function qSize(q){return q.full?q.full.width*q.full.height*4:q.r.w*q.r.h*4}
   function trimUndo(){var tot=0;undo.forEach(function(q){tot+=qSize(q)});while(undo.length>1&&(undo.length>25||tot>48e6)){tot-=qSize(undo.shift())}}
-  function snap(){undo.push({full:copyCv()});trimUndo()}
+  function snap(){undo.push({full:copyCv(),V:{strokes:strokes,bgi:bgi,bgd:bgd,bgh:bgh}});trimUndo()}
   /* g — поверхность для рисования: M (страница) или стикер */
   function ensureBase(g){if(!g.base||g.base.width!==g.cv.width||g.base.height!==g.cv.height)g.base=copyCv(g.cv);return g.base}
   function rectOf(bb,w,g){var c=(g||M).cv,pad=w/2+4,x=Math.max(0,Math.floor((bb.x0-pad)*K)),y=Math.max(0,Math.floor((bb.y0-pad)*K)),x2=Math.min(c.width,Math.ceil((bb.x1+pad)*K)),y2=Math.min(c.height,Math.ceil((bb.y1+pad)*K));return {x:x,y:y,w:Math.max(0,x2-x),h:Math.max(0,y2-y)}}
@@ -1669,10 +1702,10 @@ function initNote(lc,d){
   lc.querySelector('#nun').addEventListener('click',function(){
     while(undo.length&&undo[undo.length-1].g&&undo[undo.length-1].g.dead)undo.pop();
     if(!undo.length)return;var q=undo.pop();
-    if(q.full){putRaw(q.full);M.base=q.full;ink=true}else{patchBack(q.c,q.r,q.g);if(q.g===M)ink=true;else q.g.ink=true}
+    if(q.full){putRaw(q.full);M.base=q.full;ink=true;if(q.V){strokes=q.V.strokes;bgi=q.V.bgi;bgd=q.V.bgd;bgh=q.V.bgh}}else{patchBack(q.c,q.r,q.g);if(q.g===M){ink=true;if(q.e){var ix=strokes.lastIndexOf(q.e);if(ix>=0)strokes.splice(ix,1)}}else q.g.ink=true}
     later(1500);
   });
-  lc.querySelector('#ncl').addEventListener('click',function(){snap();putRaw(null);M.base=null;ink=false;later(1500)});
+  lc.querySelector('#ncl').addEventListener('click',function(){snap();strokes=[];bgi=null;bgd='';bgh=0;putRaw(null);M.base=null;ink=false;later(1500)});
   function pt(e,r){r=r||cv.getBoundingClientRect();return {x:(e.clientX-r.left)*LW/r.width,y:(e.clientY-r.top)*LH/r.height}}
   function spt(s,e,r){var p=pt(e,r);return {x:p.x-s.ox,y:p.y-s.oy}}
   function stkAt(p){for(var i=stks.length-1;i>=0;i--){var o=stks[i];if(p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h)return o}return null}
@@ -1714,7 +1747,7 @@ function initNote(lc,d){
   /* добавить точку к штриху: лёгкое сглаживание дрожания + сглаженный нажим */
   function addPt(s,raw,pr,final){
     var dx=raw.x-s.sp.x,dy=raw.y-s.sp.y,d=Math.sqrt(dx*dx+dy*dy),a=final?1:Math.min(1,s.al+d/9),p={x:s.sp.x+dx*a,y:s.sp.y+dy*a};
-    s.sp=p;s.pr+=(pr-s.pr)*(final?0:0.3);grow2(s,p);
+    s.sp=p;s.pr+=(pr-s.pr)*(final?0:0.3);grow2(s,p);if(s.rec)s.rec.push([p.x,p.y,s.pr]);
     if(s.tool==='mk'){s.pts.push(p);return}
     var cx=s.g.cx;setup(s);var m={x:(s.lp.x+p.x)/2,y:(s.lp.y+p.y)/2};
     cx.beginPath();cx.moveTo(s.lm.x,s.lm.y);cx.quadraticCurveTo(s.lp.x,s.lp.y,m.x,m.y);cx.lineWidth=wd(s);cx.stroke();s.lp=p;s.lm=m;
@@ -1745,6 +1778,7 @@ function initNote(lc,d){
     /* на светлом стикере «авто»-чернила всегда тёмные */
     var col=so&&NT.col==='auto'?'#16233B':inkCol();
     var s={id:e.pointerId,g:G,ox:ox,oy:oy,touch:touch,pen:pen,tool:tl,w:NT.sz[tl],c:col,pts:[p],lp:p,lm:p,sp:p,al:pen?0.6:0.4,pr:(pen&&e.pressure>0)?e.pressure:0.5,painted:false,timer:null,base:ensureBase(G),bb:{x0:p.x,y0:p.y,x1:p.x,y1:p.y}};
+    s.rec=G===M?[[p.x,p.y,s.pr]]:null;s.lq=p;
     stroke=s;
     if(touch)s.timer=setTimeout(function(){paintDot(s)},90);else paintDot(s);
   }));
@@ -1762,7 +1796,7 @@ function initNote(lc,d){
     var s=stroke;if(!s||e.pointerId!==s.id)return;
     paintDot(s);
     var ev=e.getCoalescedEvents?e.getCoalescedEvents():[e],rc=cv.getBoundingClientRect();if(!ev.length)ev=[e];
-    ev.forEach(function(q){addPt(s,spt(s,q,rc),(s.pen&&q.pressure>0)?q.pressure:0.5)});
+    ev.forEach(function(q){var r=spt(s,q,rc);if(Math.abs(r.x-s.lq.x)+Math.abs(r.y-s.lq.y)<0.5)return;s.lq=r;addPt(s,r,(s.pen&&q.pressure>0)?q.pressure:0.5)});
     if(s.tool==='mk')mark(s);
   }
   function safe(f){return function(e){try{f(e)}catch(x){dbg('Ошибка рисования: '+(x&&x.message||x))}}}
@@ -1781,6 +1815,12 @@ function initNote(lc,d){
     var s=stroke;if(!s||e.pointerId!==s.id)return;
     finishStroke(s,e.type==='pointerup'?spt(s,e):null);
   }
+  function encStroke(s){
+    var R=s.rec;if(!R||!R.length)return null;
+    var q=[],px=0,py=0,pp=0,i,x,y,v;
+    for(i=0;i<R.length;i++){x=Math.round(R[i][0]*10);y=Math.round(R[i][1]*10);v=Math.round(Math.max(0,Math.min(1,R[i][2]))*100);q.push(x-px,y-py,v-pp);px=x;py=y;pp=v}
+    return {t:s.tool==='er'?'e':(s.tool==='mk'?'m':'p'),c:s.c,w:s.w,o:(s.pen&&s.tool==='pen')?1:0,q:q}
+  }
   function finishStroke(s,fp){
     paintDot(s);
     if(fp){var ld=Math.hypot(fp.x-s.sp.x,fp.y-s.sp.y);if(ld>0.4)addPt(s,fp,s.pr,true);if(s.tool==='mk')mark(s)}
@@ -1790,7 +1830,8 @@ function initNote(lc,d){
     var r=rectOf(s.bb,s.w*1.8,s.g);
     if(r.w>0&&r.h>0){
       var pc=document.createElement('canvas');pc.width=r.w;pc.height=r.h;pc.getContext('2d').drawImage(s.base,r.x,r.y,r.w,r.h,0,0,r.w,r.h);
-      undo.push({r:r,c:pc,g:s.g});trimUndo();
+      var en=s.g===M?encStroke(s):null;if(en)strokes.push(en);
+      undo.push({r:r,c:pc,g:s.g,e:en});trimUndo();
       var g=s.base.getContext('2d');g.clearRect(r.x,r.y,r.w,r.h);g.drawImage(s.g.cv,r.x,r.y,r.w,r.h,r.x,r.y,r.w,r.h);
     }
     stroke=null;
@@ -2175,7 +2216,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v82';
+var APPV='v83';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
