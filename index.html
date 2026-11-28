@@ -261,6 +261,8 @@ dialog form{display:flex;flex-direction:column;gap:10px}
 .sqem{position:absolute;top:84px;left:12px;margin:0;z-index:4}
 
 .qd{margin:2px 8px 12px;text-align:center;font-size:13px;line-height:1.4;color:var(--muted);font-style:italic}.qd .qa{font-style:normal;white-space:nowrap}
+.qd.lw{font-style:normal;font-weight:600;color:var(--ink)}.qd .lwi{display:block}.qd .lwi+.lwi{margin-top:3px}
+.lawrow{border-top:1px solid var(--line);padding:10px 0}.lawrow:first-of-type{border-top:0;padding-top:0}.lawrow .lawt{width:100%;margin-bottom:6px}
 .effd{display:flex;align-items:center;gap:8px;text-align:right}.effd .lbl{font-size:11px;max-width:70px;line-height:1.2}
 .mc{position:relative}.mc .ef{position:absolute;top:2px;right:2px}
 .wh button .ef{display:block;margin:0 auto}
@@ -735,6 +737,8 @@ document.addEventListener('click',function(e){
   else if(a==='delgoal'){S.goals=S.goals.filter(function(g){return g.id!==id});save();drawGoals()}
   else if(a==='delsph'){if(cdel===id){S.spheres=S.spheres.filter(function(x){return x.id!==id});S.goals=S.goals.filter(function(g){return g.sphere!==id});S.zones=S.zones.filter(function(z){return z.sphere!==id});cdel='';save()}else cdel=id;drawGoals()}
   else if(a==='delzone'){S.zones=S.zones.filter(function(z){return z.id!==id});save();drawSettings()}
+  else if(a==='addlaw'){S.laws=S.laws||[];var nl={id:uid(),t:'',from:'',to:''};S.laws.push(nl);save();drawSettings();runTr();var ri=document.querySelector('.lawrow[data-id="'+nl.id+'"] .lawt');if(ri)try{ri.focus()}catch(x){}}
+  else if(a==='dellaw'){S.laws=(S.laws||[]).filter(function(x){return x.id!==id});save();drawSettings();runTr()}
   else if(a==='lang'){setLang(b.dataset.v)}
   else if(a==='opengoal')openGoal(id);
   else if(a==='gcancel')document.getElementById('gdlg').close();
@@ -993,7 +997,7 @@ document.addEventListener('input',function(e){
   document.getElementById('bed').value=S.bed;document.getElementById('sleepv').textContent=fmtSleep(v);
 });
 function drawSettings(){
-  document.getElementById('view').innerHTML='<h2 style="margin:0 0 10px">Настройки</h2>'+acctCard()+installCard()+langCard()+themeCard()+gcCard()+moveCard()+snapCard()+
+  document.getElementById('view').innerHTML='<h2 style="margin:0 0 10px">Настройки</h2>'+acctCard()+installCard()+langCard()+themeCard()+lawsCard()+gcCard()+moveCard()+snapCard()+
     '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Режим дня</h2><div class="row"><label class="field"><span class="lbl">Подъём</span><input type="time" id="wake" value="'+S.wake+'"></label><label class="field"><span class="lbl">Отбой</span><input type="time" id="bed" value="'+S.bed+'"></label></div>'+sleepBlock()+'</div>'+
     lifeCard()+'<h2 style="font-size:16px;margin:16px 0 4px">Время для сфер</h2><p class="lbl" style="margin:0 0 8px">Когда вы ежедневно посвящаете время каждой сфере и в какие дни недели. Эти отрезки показаны цветными полосами в календаре.</p>'+
     S.spheres.map(function(x){var s=sp(x.id);return '<section class="card"><div class="sph"><span class="dot" style="background:'+s.c+'"></span><h2>'+s.n+'</h2></div>'+zoneBox(x.id)+'</section>'}).join('');
@@ -1382,6 +1386,23 @@ function trAll(root){
 function runTr(){if(OB)OB.disconnect();trAll(document.body);if(OB)OB.observe(document.body,OBC)}
 function setLang(l){LANG=l;S.lang=l;save();document.documentElement.lang=l;render();runTr()}
 var LNG=[['ru','RU','Русский'],['en','EN','English'],['pl','PL','Polski'],['uk','UKR','Українська']];
+function lawsCard(){
+  var L=S.laws||[];
+  return '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Природные законы</h2><p class="lbl" style="margin:0 0 10px">Законы, которые вы хотите помнить. В выбранные даты они показываются в Ежедневнике вместо цитаты дня. Если даты не указаны, закон показывается всегда.</p>'+
+  L.map(function(x){return '<div class="lawrow" data-id="'+x.id+'"><input type="text" class="lawt" maxlength="140" placeholder="Например: Всё течёт, всё меняется" value="'+esc(x.t||'')+'" aria-label="Текст закона"><div class="row" style="align-items:flex-end;gap:8px"><label class="field"><span class="lbl">С</span><input type="date" class="lawf" value="'+(x.from||'')+'"></label><label class="field"><span class="lbl">По</span><input type="date" class="lawu" value="'+(x.to||'')+'"></label><button type="button" class="ic" data-act="dellaw" data-id="'+x.id+'" aria-label="Удалить закон" title="Удалить закон">×</button></div></div>'}).join('')+
+  '<button type="button" class="btn" data-act="addlaw" style="margin-top:8px">Добавить закон</button></div>';
+}
+function lawsOn(d){
+  return (S.laws||[]).filter(function(x){
+    var t=(x.t||'').trim();if(!t)return false;
+    var a=x.from||'',b=x.to||'';if(a&&b&&a>b){var q=a;a=b;b=q}
+    return (!a||d>=a)&&(!b||d<=b)
+  })
+}
+var lawTm=0;
+function lawSet(el,k,v){var r=el.closest('.lawrow'),id=r&&r.dataset.id;(S.laws||[]).forEach(function(x){if(x.id===id)x[k]=v});clearTimeout(lawTm);lawTm=setTimeout(save,500)}
+document.addEventListener('input',function(e){var t=e.target;if(t.classList&&t.classList.contains('lawt'))lawSet(t,'t',t.value)});
+document.addEventListener('change',function(e){var t=e.target;if(!t.classList)return;if(t.classList.contains('lawf'))lawSet(t,'from',t.value);else if(t.classList.contains('lawu'))lawSet(t,'to',t.value)});
 function langCard(){
   return '<div class="card"><h2 style="font-size:16px;margin-bottom:8px">Язык приложения</h2><div class="seg">'+LNG.map(function(x){return '<button type="button" data-act="lang" data-v="'+x[0]+'" aria-pressed="'+(LANG===x[0])+'" aria-label="'+x[2]+'" lang="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div></div>';
 }
@@ -2127,6 +2148,9 @@ function quoteOf(d){
 }
 function drawQuote(){
   var e=document.getElementById('qd');if(!e)return;
+  var L=lawsOn(day);
+  if(L.length){e.className='qd lw';e.innerHTML=L.map(function(x){return '<span class="lwi">'+esc(x.t.trim())+'</span>'}).join('');return}
+  e.className='qd';
   var q=quoteOf(day);e.innerHTML='\u201C'+esc(q.t)+'\u201D <span class="qa">\u2014 '+esc(q.a)+'</span>';
 }
 
@@ -2216,7 +2240,7 @@ function sPieces(){
   return o;
 }
 function errC(e){if(!e)return '';var c=e.code||e.name||'',m=String(e.message||'').slice(0,80);return c&&m?c+': '+m:(c||m)}
-var APPV='v83';
+var APPV='v84';
 function setSyn(st){
   var e=document.getElementById('syn');if(!e)return;
   e.textContent=({sync:'Синхронизация…',ok:'☁ Синхронизировано',err:'Нет связи с облаком, повторяю попытку. Данные сохранены на этом устройстве',off:'Без синхронизации: данные только на этом устройстве'})[st]||'';
@@ -3149,6 +3173,13 @@ document.addEventListener('click',function(e){
 setTimeout(snapTake,2000);setInterval(snapTake,600000);
 (function(){function D(r,e,p,u){if(!DICT[r])DICT[r]=[e,p,u]}
 D('Резервные копии','Backups','Kopie zapasowe','Резервні копії');
+D('По','To','Do','До');
+D('Природные законы','Natural laws','Prawa natury','Природні закони');
+D('Законы, которые вы хотите помнить. В выбранные даты они показываются в Ежедневнике вместо цитаты дня. Если даты не указаны, закон показывается всегда.','Laws you want to remember. On the chosen dates they are shown in the Planner instead of the quote of the day. If no dates are set, the law is always shown.','Prawa, które chcesz pamiętać. W wybranych dniach są pokazywane w Planerze zamiast cytatu dnia. Jeśli nie ustawisz dat, prawo jest pokazywane zawsze.','Закони, які ви хочете пам’ятати. У вибрані дати вони показуються в Щоденнику замість цитати дня. Якщо дати не вказано, закон показується завжди.');
+D('Например: Всё течёт, всё меняется','For example: Everything flows, everything changes','Na przykład: Wszystko płynie, wszystko się zmienia','Наприклад: Все тече, все змінюється');
+D('Текст закона','Law text','Treść prawa','Текст закону');
+D('Добавить закон','Add a law','Dodaj prawo','Додати закон');
+D('Удалить закон','Delete law','Usuń prawo','Видалити закон');
 D('Восстановить','Restore','Przywróć','Відновити');
 D('Нажмите ещё раз','Press again','Naciśnij ponownie','Натисніть ще раз');
 D('Копий пока нет','No backups yet','Brak kopii','Копій ще немає');
