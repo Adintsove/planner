@@ -2133,14 +2133,14 @@ function enhDur(){
 
 /* ===== Синхронизация между устройствами (db) ===== */
 S.sync=S.sync||{h:{},mt:{}};S.sync.h=S.sync.h||{};S.sync.mt=S.sync.mt||{};
-var SYN={on:false,ready:false,busy:false,P:null,C:null,q:Promise.resolve(),tm:0,rt:0,dirty:{},err:'',cc:0,force:false,skip:{}};
+var SYN={on:false,ready:false,busy:false,P:null,C:null,q:Promise.resolve(),tm:0,rt:0,dirty:{},err:'',cc:0,force:false,skip:{},wrote:[]};
 function cnt(str){try{var o=JSON.parse(str);return (o.tasks||[]).length+(o.bag||[]).length+(o.goals||[]).length}catch(e){return 0}}
 var SKEEP={notes:1,sync:1,theme:1,lang:1};
 function hsh(str){var h1=0xdeadbeef,h2=0x41c6ce57,i,c;for(i=0;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)+'.'+str.length}
+function sMainStr(){var main={};Object.keys(S).forEach(function(k){if(!SKEEP[k])main[k]=S[k]});return JSON.stringify(main)}
 function sPieces(){
-  var o={},main={};
-  Object.keys(S).forEach(function(k){if(!SKEEP[k])main[k]=S[k]});
-  o.main=JSON.stringify(main);
+  var o={};
+  o.main=sMainStr();
   Object.keys(S.notes||{}).forEach(function(d){o['n-'+d]=JSON.stringify(S.notes[d])});
   return o;
 }
@@ -2191,6 +2191,7 @@ async function sProc(snap){
   var pc=sPieces(),applied=false,i,d,key,m,lh,lc,json;
   for(i=0;i<snap.docs.length;i++){
     d=snap.docs[i];key=d.id;m=d.data();if(!m||!m.h||m.h===S.sync.h[key])continue;
+    if(SYN.wrote.indexOf(m.h)>=0)continue;
     lh=pc[key]!==undefined?hsh(pc[key]):null;
     if(lh===m.h){S.sync.h[key]=m.h;continue}
     lc=lh!==null&&lh!==S.sync.h[key];
@@ -2216,6 +2217,7 @@ async function sChunks(pref,str){
   return n;
 }
 async function sWrite(k,str,h){
+  SYN.wrote.push(h);if(SYN.wrote.length>40)SYN.wrote.shift();
   var ts=Date.now(),c=k==='main'?cnt(str):undefined,n=await sChunks(k,str),meta={ts:ts,h:h,n:n};
   if(c!==undefined)meta.c=c;
   await SYN.P.doc(k).set(meta);
@@ -2224,7 +2226,11 @@ async function sWrite(k,str,h){
     /* облачная копия последнего «здорового» состояния, не чаще раза в 30 минут */
     if(c>0&&ts-(S.sync.bakTs||0)>1800000){try{var bn=await sChunks('bak',str);await SYN.C.doc('bakm').set({ts:ts,h:h,n:bn,c:c});S.sync.bakTs=ts}catch(e){}}
   }
-  S.sync.h[k]=h;S.sync.mt[k]=ts;delete SYN.dirty[k];delete SYN.skip[k];
+  S.sync.h[k]=h;delete SYN.skip[k];
+  /* если во время записи пользователь успел что-то изменить, это изменение остаётся «новее» облака */
+  var cur=sPieces()[k];
+  if(cur!==undefined&&hsh(cur)!==h){S.sync.mt[k]=Date.now();SYN.dirty[k]=1}
+  else{S.sync.mt[k]=ts;delete SYN.dirty[k]}
 }
 function sPending(){var pc=sPieces();return Object.keys(pc).filter(function(k){var h=hsh(pc[k]);return h!==S.sync.h[k]&&SYN.skip[k]!==h})}
 function synBanner(show){
@@ -2271,7 +2277,12 @@ async function sPush(){
 /* повторы с нарастающей паузой: 4, 10, 20, 40, 80, 120 секунд */
 function backoff(n){return Math.min(120000,[4000,10000,20000,40000,80000][Math.min(n,5)-1]||120000)}
 function schedPush(ms){if(!SYN.on)return;clearTimeout(SYN.tm);SYN.tm=setTimeout(function(){sPush().then(function(){if(SYN.err)schedPush(backoff(SYN.fail||1));else if(sPending().length)schedPush(2500)})},ms===undefined?2500:ms)}
-var _sv0=save;save=function(){_sv0();schedPush()};
+var _sv0=save;save=function(){
+  _sv0();
+  /* правка помечается «новее облака» сразу, а не в момент отправки: иначе чужая или собственная запись из облака может её затереть */
+  if(SYN.on&&SYN.ready){try{if(hsh(sMainStr())!==S.sync.h.main){S.sync.mt.main=Date.now();SYN.dirty.main=1}}catch(e){}}
+  schedPush();
+};
 document.addEventListener('visibilitychange',function(){if(document.hidden&&SYN.on){clearTimeout(SYN.tm);sPush()}});
 function synStop(){
   SYN.on=false;SYN.ready=false;clearTimeout(SYN.st);clearTimeout(SYN.tm);
